@@ -1,0 +1,11 @@
+
+      WITH_SHARED_LIBS := FALSE
+         WITH_PTHREADS := TRUE
+               INC_ADD := -I$(PROJECT_ROOT)/dbadmin
+
+   TARGETS  := $(SHLIB_PRE)mnebase.$(SHLIB) rexec
+
+rexec.WITH_GD       := FALSE
+rexec.WITH_POSTGRES := FALSE
+rexec.LIBS          := mnebase
+rexec.SOURCES       := rexec.cpp 
