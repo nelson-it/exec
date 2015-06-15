@@ -3,8 +3,7 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-. exec/system/shell/apache2/webdav/mneerp/read.sh
-
+find_script apache2/webdav read.sh
 
 find_template conffile      apache2/webdav webdav.conf
 find_template conffile_dirs apache2/webdav webdav_directories.conf
@@ -17,7 +16,7 @@ prog='/####RELEASENAME####/ { gsub(/####RELEASENAME####/,releasename); }
       /####DESCRIPTION####/ { gsub(/####DESCRIPTION####/,description); }
                             { print $0 }'
 
-dirs=`( get_data "$getreleases"  | \
+dirs=`( get_data "$getreleases" | \
   while read line; 
   do
      get_releases "$line"
@@ -32,13 +31,6 @@ conf=`awk "$prog" "directories=$dirs" $conffile`
 echo "$conf" >   $apache2sitedir/mne_webdav.conf
 
 a2ensite mne_webdav.conf 2>&1 > /dev/null
-if [ "$?" != "0" ]; then
-    echo error during enable mne_webdav.conf
-fi
-
 service apache2 reload 2>&1 > /dev/null
-if [ "$?" != "0" ]; then
-    echo error during reload service
-fi
 
-exit 0
+exit $exit_status
