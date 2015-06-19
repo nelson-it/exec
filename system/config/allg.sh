@@ -4,6 +4,10 @@ function mne_error_handler()
 {
     # Aufruf mit: trap 'mne_error_handler $BASH_COMMAND $LINENO $?' ERR
 
+    if [ "`type -t script_error_handler`" = "function" ]; then
+         script_error_handler $1 $2 $3
+    fi
+
 	if [ "$mne_error_ignore" = "1" ]; then
 		return;
 	fi

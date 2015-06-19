@@ -5,9 +5,11 @@
 
 . exec/system/shell/allg/db.sh
 
+devices=
 for device in `ls /sys/class/net`
 do
   if [ "$device" != "lo" ]; then
+    devices="$devices '$device'"
     declare netaddr= netmask= netbcast= netgateway= dnssearch= dnsnameserver= dnsdomain=
     declare `awk 'BEGIN { devfound=0; }
          /^#/                     { next }
@@ -35,3 +37,7 @@ do
     fi
   fi
 done
+
+devices=`echo $devices | sed -e 's/ /,/g'`
+DELETE="DELETE FROM mne_system.network WHERE networkid NOT IN ( $devices )"
+result=`get_data "$DELETE"`

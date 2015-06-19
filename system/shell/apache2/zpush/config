@@ -5,12 +5,18 @@
 
 . exec/system/shell/apache2/zpush/mneerp/read.sh
 
-get_carddav "`get_data "$getcarddav"`"
-
 file=`fgrep /Microsoft-Server-ActiveSync /etc/apache2/sites-available/mne_erpdav.conf | sed -e "s/[ \t]+/ /"g | cut -d" " -f 3`
-
 carddavsavefile="`dirname $file`/backend/carddav/config.mne_save"
 carddavconffile="`dirname $file`/backend/carddav/config.php"
+cp $carddavconffile $carddavsavefile
 
-mv $carddavconffile $carddavsavefile
+function script_error_handler()
+{
+	mv $carddavsavefile $carddavconffile
+}
+
+get_carddav "`get_data "$getcarddav"`"
+
+addressbookname=`echo "$addressbookname" | sed -e "s/@/\\\\\\\\@/g"`
+
 sed -e "/CARDDAV_CONTACTS_FOLDER_NAME/s@^.*\$@define('CARDDAV_CONTACTS_FOLDER_NAME', '$addressbookname');@" < $carddavsavefile > $carddavconffile
