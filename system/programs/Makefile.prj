@@ -1,7 +1,6 @@
 
       WITH_SHARED_LIBS := FALSE
          WITH_PTHREADS := TRUE
-               INC_ADD := -I$(PROJECT_ROOT)/dbadmin
 
    TARGETS  := $(SHLIB_PRE)mnebase.$(SHLIB) rexec
 
