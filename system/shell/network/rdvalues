@@ -5,6 +5,8 @@
 
 . exec/system/shell/allg/db.sh
 
+find_script network check.sh
+
 acttime=`date +%s`
 INSERT="DELETE FROM mne_system.netdevice; DELETE FROM mne_system.netparam";
 result=`get_data "$INSERT"`;

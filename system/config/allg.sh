@@ -29,6 +29,19 @@ function mne_error_handler()
 trap 'mne_error_handler "$BASH_COMMAND" $LINENO $?' ERR
 exit_status=0
 
+function mne_checksys()
+{
+	for i in "${sysok[@]}"
+	do
+		if [ "$SYSVERSION" = "$i" ]; then
+			return;
+		fi
+	done
+	
+	echo "system not supported" 1>&2
+	exit 2;
+}
+
 export LANG=C
 
 DBUSER=mneerpsystem
@@ -37,17 +50,28 @@ DB=erpdb
 IMPL=mneerp
 DATAROOT=`pwd`/data
 
+UNAME=`uname`
 SYSVERSION=default
-fgrep 12.04 /etc/issue 2>&1 > /dev/null
-if [ "$?" = "0" ]; then
-    SYSVERSION=12_04
- fi
 
-fgrep 14.04 /etc/issue 2>&1 > /dev/null
-if [ "$?" = "0" ]; then
+if [ "$UNAME" = "Linux" ]; then
+  fgrep 12.04 /etc/issue 2>&1 > /dev/null
+  if [ "$?" = "0" ]; then
+      SYSVERSION=12_04
+   fi
+
+  fgrep 14.04 /etc/issue 2>&1 > /dev/null
+  if [ "$?" = "0" ]; then
     SYSVERSION=14_04
+  fi
 fi
- 
+
+if [ "$UNAME" = "Darwin" ]; then
+    sw_vers -productVersion | fgrep 10.8 > /dev/null
+    if [ "$?" = "0" ]; then
+      SYSVERSION=mac_10_8
+    fi
+fi
+
 if [ -f "exec/local/system/config/$SYSVERSION/config.sh" ]; then
   . exec/local/system/config/$SYSVERSION/config.sh
 fi
