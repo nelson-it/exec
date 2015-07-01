@@ -5,7 +5,7 @@
 
 . exec/system/shell/apache2/zpush/mneerp/read.sh
 
-file=`fgrep /Microsoft-Server-ActiveSync /etc/apache2/sites-available/mne_erpdav.conf | sed -e "s/[ \t]+/ /"g | cut -d" " -f 3`
+file=`fgrep /Microsoft-Server-ActiveSync $apache2sitedir/mne_erpdav.conf | sed -e "s/[ \t]+/ /"g | cut -d" " -f 3`
 carddavsavefile="`dirname $file`/backend/carddav/config.mne_save"
 carddavconffile="`dirname $file`/backend/carddav/config.php"
 cp $carddavconffile $carddavsavefile

@@ -3,6 +3,7 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
+find_script apache2/webdav check.sh
 find_script apache2/webdav read.sh
 
 find_template conffile      apache2/webdav webdav.conf
@@ -24,13 +25,18 @@ dirs=`( get_data "$getreleases" | \
      echo "$dir"
   done )`
 
-prog='/####DIRECTORYS####/ { gsub(/####DIRECTORYS####/,directories); }
+prog='/####DIRECTORYS####/ { gsub(/####DIRECTORYS####/,directories); printf($0); next; }
                            { print $0 }'
                            
+dirs=`echo "$dirs" | awk '{ gsub("%", "%%"); printf("%s\\\\n", $0);}'`
+
 conf=`awk "$prog" "directories=$dirs" $conffile`
 echo "$conf" >   $apache2sitedir/mne_webdav.conf
 
-a2ensite mne_webdav.conf 2>&1 > /dev/null
-service apache2 reload 2>&1 > /dev/null
+if [ "$apache2ensite" != "" ]; then
+  $apache2ensite mne_webdav.conf 2>&1 > /dev/null
+fi
+
+$apache2reload 2>&1 > /dev/null
 
 exit $exit_status

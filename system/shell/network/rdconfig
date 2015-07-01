@@ -5,6 +5,8 @@
 
 . exec/system/shell/allg/db.sh
 
+find_script network check.sh
+
 devices=
 for device in `ls /sys/class/net`
 do
