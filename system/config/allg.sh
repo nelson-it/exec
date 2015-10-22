@@ -44,8 +44,8 @@ function mne_checksys()
 
 export LANG=C
 
-DBUSER=mneerpsystem
-DB=erpdb
+DBUSER=mnephotosystem
+DB=photodb
 
 IMPL=mneerp
 DATAROOT=`pwd`/data
@@ -60,6 +60,11 @@ if [ "$UNAME" = "Linux" ]; then
    fi
 
   fgrep 14.04 /etc/issue 2>&1 > /dev/null
+  if [ "$?" = "0" ]; then
+    SYSVERSION=14_04
+  fi
+
+  fgrep 15.04 /etc/issue 2>&1 > /dev/null
   if [ "$?" = "0" ]; then
     SYSVERSION=14_04
   fi
