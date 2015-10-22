@@ -27,14 +27,13 @@ int main(int argc, char **argv)
     setgroups(0, NULL);
     setgid( 0 );
 
-    if ( chdir((char*)a["projectroot"]) < 0)
+   if ( chdir((char*)a["projectroot"]) < 0)
     {
         fprintf(stderr, "can't change to projectroot\n");
         exit (-1);
     }
 
     execl( (std::string("exec/system/shell/") + *largv).c_str(), (std::string("exec/system/shell/") + *largv).c_str(), "-locale", (char*)a["locale"], NULL );
-
-    fprintf(stderr, "command not found <%s>\n", *largv);
+    fprintf(stderr, "command not found <%s>\n", (((std::string)((char*)a["projectroot"])) + "/exec/system/shell/" + *largv).c_str());
     exit(-1);
 }
