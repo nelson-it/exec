@@ -26,11 +26,15 @@ dirs=`( get_data "$getreleases" | \
   done )`
 
 prog='/####DIRECTORYS####/ { gsub(/####DIRECTORYS####/,directories); printf($0); next; }
+      /####DB####/         { gsub(/####DB####/,db); }
+      /####DBUSER####/     { gsub(/####DBUSER####/,dbuser); }
                            { print $0 }'
                            
 dirs=`echo "$dirs" | awk '{ gsub("%", "%%"); printf("%s\\\\n", $0);}'`
 
-conf=`awk "$prog" "directories=$dirs" $conffile`
+conf=`awk "$prog" "directories=$dirs" "db=$DB" "dbuser=$DBUSER" $conffile`
+
+rm -f $apache2sitedir/mne_webdav.conf 2>&1 >/dev/null
 echo "$conf" >   $apache2sitedir/mne_webdav.conf
 
 if [ "$apache2ensite" != "" ]; then
