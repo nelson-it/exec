@@ -33,7 +33,7 @@ int main(int argc, char **argv)
         exit (-1);
     }
 
-    execl( (std::string("exec/system/shell/") + *largv).c_str(), (std::string("exec/system/shell/") + *largv).c_str(), "-locale", (char*)a["locale"], NULL );
+    execl( (std::string("exec/system/shell/") + *largv).c_str(), (std::string("exec/system/shell/") + *largv).c_str(), "-locale", (char*)a["locale"], "-project", (char*)a["project"], NULL );
 
     fprintf(stderr, "command not found <%s>\n", *largv);
     exit(-1);
