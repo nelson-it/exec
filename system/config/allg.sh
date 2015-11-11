@@ -46,9 +46,14 @@ export LANG=C
 
 DBUSER=mnephotosystem
 DB=photodb
+while [ $# -gt 0 ] ; do
+  case $1 in
+    -project) project=$2; shift 2;;
+     *)       shift 1 ;;
+  esac
+done
 
-IMPL=mneerp
-DATAROOT=`pwd`/data
+. $project/exec/system/config.sh
 
 UNAME=`uname`
 SYSVERSION=default
@@ -74,6 +79,10 @@ if [ "$UNAME" = "Darwin" ]; then
     sw_vers -productVersion | fgrep 10.8 > /dev/null
     if [ "$?" = "0" ]; then
       SYSVERSION=mac_10_8
+    fi
+    sw_vers -productVersion | fgrep 10.11 > /dev/null
+    if [ "$?" = "0" ]; then
+      SYSVERSION=mac_10_11
     fi
 fi
 
