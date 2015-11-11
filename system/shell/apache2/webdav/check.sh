@@ -1,2 +1,1 @@
-sysok=( 12_04 14_04 15_04 )
-mne_checksys
+sysok=( 12_04 14_04 mac_10_8 mac_10_11 )
