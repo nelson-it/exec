@@ -44,8 +44,9 @@ function mne_checksys()
 
 export LANG=C
 
-DBUSER=mnephotosystem
-DB=photodb
+DBUSER=
+DB=
+DATAROOT=
 while [ $# -gt 0 ] ; do
   case $1 in
     -project) project=$2; shift 2;;
