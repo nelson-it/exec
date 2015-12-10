@@ -72,7 +72,7 @@ if [ "$UNAME" = "Linux" ]; then
 
   fgrep 15.04 /etc/issue 2>&1 > /dev/null
   if [ "$?" = "0" ]; then
-    SYSVERSION=14_04
+    SYSVERSION=15_04
   fi
 fi
 
