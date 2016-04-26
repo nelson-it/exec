@@ -12,17 +12,21 @@ function mne_error_handler()
 		return;
 	fi
 
-	if [ "$mne_error_need" = "" ]; then
-	    cmd=`echo $1 | cut "-d " -f 1`
-        if [ "$cmd" = "fgrep" ]; then
-		 return;
-		fi
-	fi
-    
+    if [ "$mne_error_need" = "" ]; then
+        cmd=`echo $1 | cut "-d " -f 1`
+        if [ "$cmd" = "grep" ] || [ "$cmd" = "fgrep" ] || [ "$cmd" = "egrep" ]; then
+            return;
+        fi
+    fi
+  
     echo "error in: $0" 1>&2
     echo "     cmd: $1" 1>&2
     echo "    line: $2" 1>&2
     echo "  status: $3" 1>&2
+    if [ "$noexit" = "1" ]; then
+        noexit=0
+        return;
+    fi
     exit 1
 }
 
@@ -44,12 +48,19 @@ function mne_checksys()
 
 export LANG=C
 
+bs='\\'
+
 DBUSER=
 DB=
 DATAROOT=
+TEMLDIR=exec/system/templates
+
 while [ $# -gt 0 ] ; do
   case $1 in
     -project) project=$2; shift 2;;
+       -user) daemonuser=$2; shift 2;;
+     -locale) deamonlocale=$2; shift 2;;
+     -va*)    p=${1//\./_}; eval "${p:1}=\"$2\"";  shift 2 ;;
      *)       shift 1 ;;
   esac
 done
@@ -87,10 +98,17 @@ if [ "$UNAME" = "Darwin" ]; then
     fi
 fi
 
-if [ -f "exec/local/system/config/$SYSVERSION/config.sh" ]; then
-  . exec/local/system/config/$SYSVERSION/config.sh
+  . exec/system/config/config.sh
+
+if [ -f "exec/local/system/config/config.sh" ]; then
+  . exec/local/system/config/config.sh
 fi
 
 if [ -f "exec/system/config/$SYSVERSION/config.sh" ]; then
   . exec/system/config/$SYSVERSION/config.sh
 fi
+
+if [ -f "exec/local/system/config/$SYSVERSION/config.sh" ]; then
+  . exec/local/system/config/$SYSVERSION/config.sh
+fi
+

@@ -8,8 +8,8 @@
 find_script network check.sh
 
 acttime=`date +%s`
-INSERT="DELETE FROM mne_system.netdevice; DELETE FROM mne_system.netparam";
-result=`get_data "$INSERT"`;
+DELETE="SELECT mne_system.netdevice_del()"
+result=`get_data "$DELETE"`
 
 for device in `ls /sys/class/net`
 do
