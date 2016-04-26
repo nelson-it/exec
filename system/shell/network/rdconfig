@@ -7,6 +7,9 @@
 
 find_script network check.sh
 
+DELETE="SELECT mne_system.network_del()"
+result=`get_data "$DELETE"`
+
 devices=
 for device in `ls /sys/class/net`
 do
@@ -30,7 +33,7 @@ do
          END                      { print "netdev=ready" }
       ' $netinterfaces`
 
-    INSERT="SELECT mne_system.net_read('$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
+    INSERT="SELECT mne_system.network_add('$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
     result=`get_data "$INSERT"`;
   
     if [ "$result" != 'ok' ]; then
@@ -39,7 +42,3 @@ do
     fi
   fi
 done
-
-devices=`echo $devices | sed -e 's/ /,/g'`
-DELETE="DELETE FROM mne_system.network WHERE networkid NOT IN ( $devices )"
-result=`get_data "$DELETE"`

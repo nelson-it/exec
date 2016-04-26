@@ -2,45 +2,26 @@
 
 function find_template()
 {
-   if [ -f "exec/local/system/templates/$SYSVERSION/$2/$IMPL/$3" ]; then
-     eval $1=exec/local/system/templates/$SYSVERSION/$2/$IMPL/$3;
+   if [ -f "$TEMLDIR/$2/$IMPL/$SYSVERSION/$3" ]; then
+     eval $1=$TEMLDIR/$2/$IMPL/$SYSVERSION/$3;
      return
    fi
    
-   if [ -f "exec/local/system/templates/default/$2/$IMPL/$3" ]; then
-     eval $1=exec/local/system/templates/default/$2/$IMPL/$3;
+   if [ -f "$TEMLDIR/$2/$IMPL/$3" ]; then
+     eval $1=$TEMLDIR/$2/$IMPL/$3;
      return
    fi
    
-   if [ -f "exec/local/system/templates/$SYSVERSION/$2/$3" ]; then
-     eval $1=exec/local/system/templates/$SYSVERSION/$2/$3;
+   if [ -f "$TEMLDIR/$2/$SYSVERSION/$3" ]; then
+     eval $1=$TEMLDIR/$2/$SYSVERSION/$3;
      return
    fi
-   
-   if [ -f "exec/local/system/templates/default/$2/$3" ]; then
-     eval $1=exec/local/system/templates/default/$2/$3;
+
+   if [ -f "$TEMLDIR/$2/$3" ]; then
+     eval $1=$TEMLDIR/$2/$3;
      return
    fi
-   if [ -f "exec/system/templates/$SYSVERSION/$2/$IMPL/$3" ]; then
-      eval $1=exec/system/templates/$SYSVERSION/$2/$IMPL/$3;
-     return
-   fi
-   
-   if [ -f "exec/system/templates/default/$2/$IMPL/$3" ]; then
-     eval $1=exec/system/templates/default/$2/$IMPL/$3;
-     return
-   fi
-   
-   if [ -f "exec/system/templates/$SYSVERSION/$2/$3" ]; then
-     eval $1=exec/system/templates/$SYSVERSION/$2$3;
-     return
-   fi
-   
-   if [ -f "exec/system/templates/default/$2/$3" ]; then
-     eval $1=exec/system/templates/default/$2/$3;
-     return
-   fi
-   
+
    echo "File not found $2 $3" 1>&2 
    exit -1
 } 
