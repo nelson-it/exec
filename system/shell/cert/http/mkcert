@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ ! -e $certkeydir/$domain.key ]; then
+    openssl genrsa -out $certkeydir/$domain.key 4096
+fi
+
+if [ "$aliases" != "" ]; then
+    echo "subjectAltName=DNS:$domain,$aliases" | sed -e "s/,/,DNS:/g" > $scriptdir/multi.cnf
+else
+    echo > $scriptdir/multi.cnf
+fi
+
+rm -f $certcsrdir/$domain.csr  2>&1 >/dev/null
+rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
+
+cat $certscriptdir/openssl.conf $scriptdir/multi.cnf > $scriptdir/sslconf.cnf
+openssl req -new -sha256 -key $certkeydir/$domain.key -out $certcsrdir/$domain.csr -config $scriptdir/sslconf.cnf -subj "/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
+
+echo $vapasswdInput | openssl x509 -req -days 365 -extfile $scriptdir/multi.cnf \
+		     -in $certcsrdir/$domain.csr -CA $certcadir/ca.crt -CAkey $certcadir/ca.key -CAcreateserial -CAserial $certcadir/serial.seq -out $certcertdir/$domain.crt -passin stdin
+
+if [ "$?" != "0" ]; then
+    rm -f $certcsrdir/$domain.csr  2>&1 >/dev/null
+    rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
+fi   
+
+rm -f $scriptdir/multi.cnf
+rm -f $scriptdir/sslconf.cnf
