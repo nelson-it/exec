@@ -27,6 +27,10 @@ do
            email=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveradmin/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
     documentroot=`awk '/^[ \t]*#/ { next } tolower($1) ~ /documentroot/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
     
+    if [ "$domain" = "" ]; then
+        domain=`hostname`
+    fi
+    
     mne_error_ignore=1
     httpsonly=true
     egrep -q 'mne_default_template_http$' $apache2rootdir/sites-available/$site
@@ -44,8 +48,8 @@ do
                                                           -e "s/\(^[^#]*Directory\).*$dr.*/\1 ####DOCUMENTROOT####>/" \
                                                           -e "s/\(^[^#]*[Dd]ocument[Rr]oot\).*$datalocation.*/\1 ####DATAROOT########DOCUMENTROOT####/" \
                                                           -e "s/\(^[^#]*[Dd]ocument[Rr]oot\).*$dr.*/\1 ####DOCUMENTROOT####/" \
-                                                          -e "s/\(^[^#]*SSLCertificateFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/certs\/####DOMAIN####.crt/" \
-                                                          -e "s/\(^[^#]*SSLCertificateKeyFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/keys\/####DOMAIN####.key/" \
+                                                          -e "s/\(^[^#]*SSLCertificateFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/cert\/####DOMAIN####.crt/" \
+                                                          -e "s/\(^[^#]*SSLCertificateKeyFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/key\/####DOMAIN####.key/" \
                                                           -e "s/\(.*VirtualHost.*\*:\)$port.*>/\1####HTTPPORT####>/" \
                                                           -e "s/\(.*VirtualHost.*\*:\)$sport.*>/\1####HTTPSPORT####>/"`
     

@@ -3,8 +3,7 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-domain=${vafilenameInput_old%.*}
-
-rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
+rm -f $certcertdir/$vafilenameInput_old 2>&1 >/dev/null
+$apache2restart
 
 exit 0

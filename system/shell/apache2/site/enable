@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
@@ -67,7 +67,7 @@ get_data "$getsites" | \
     fi
 done
 
-$apache2restart  2>&1 > /dev/null
+$apache2reload  2>&1 > /dev/null
 
 exit $exit_status
 

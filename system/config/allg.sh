@@ -55,12 +55,19 @@ DB=
 DATAROOT=
 TEMLDIR=exec/system/templates
 
+phkomma="'"'\"'"'"'\"'"'"
+prog='/'"'"'/ { gsub(/'"'"'/, "'$phkomma'") } { print$0 }'
+
 while [ $# -gt 0 ] ; do
   case $1 in
     -project) project=$2; shift 2;;
        -user) daemonuser=$2; shift 2;;
      -locale) deamonlocale=$2; shift 2;;
-     -va*)    p=${1//\./_}; eval "${p:1}=\"$2\"";  shift 2 ;;
+        -va*) p=${1//\./_};
+            v=`echo "$2" | awk "$prog"`;
+            eval "${p:1}='$v'";
+              shift 2 ;;
+
      *)       shift 1 ;;
   esac
 done
@@ -84,6 +91,11 @@ if [ "$UNAME" = "Linux" ]; then
   fgrep 15.04 /etc/issue 2>&1 > /dev/null
   if [ "$?" = "0" ]; then
     SYSVERSION=15_04
+  fi
+
+  fgrep 16.04 /etc/issue 2>&1 > /dev/null
+  if [ "$?" = "0" ]; then
+    SYSVERSION=16_04
   fi
 fi
 

@@ -34,8 +34,9 @@ do
             rm "$apache2rootdir/sites-enabled/$site"
         fi
         rm "$apache2rootdir/sites-available/$site"
-        rm "$apache2rootdir/ssl/$name.crt"
-        rm "$apache2rootdir/ssl/$name.key"
+        rm "$certcertdir/$name.crt"
+        rm "$certcsrdir/$name.csr"
+        rm "$certkeydir/$name.key"
         mne_error_ignore=
     fi
 done

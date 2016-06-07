@@ -25,7 +25,7 @@ chmod 750 $certcsrdir
 conf=`get_data "$getcertconf"`
 get_certconf "$conf"
 
-if [ -f $certcadir/ca.key ]; then
+if [ -f $certcadir/ca.crt ]; then
     chmod 600 $certcadir/ca.key
     chmod 640 $certcadir/ca.crt
     if [ "$vaoverwriteInput" != "1" ]; then
@@ -36,3 +36,7 @@ fi
 
 echo $vapasswdInput | openssl genrsa -des3 -passout stdin -out $certcadir/ca.key 4096 > /dev/null 2>&1
 echo $vapasswdInput | openssl req -new -x509 -days 3650 -passin stdin -key $certcadir/ca.key -out $certcadir/ca.crt -config $scriptdir/../openssl.conf -extensions v3_ca -subj "/CN=$org CA/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
+
+domain=`hostname`
+aliases=`hostname --all-fqdns | sed -e 's/ *$//' -e "s/ /,/g"`
+. exec/system/shell/cert/http/mkcert

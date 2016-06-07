@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export RANDFILE=/root/.rnd
+
 if [ ! -e $certkeydir/$domain.key ]; then
     openssl genrsa -out $certkeydir/$domain.key 4096
 fi
@@ -7,13 +9,14 @@ fi
 if [ "$aliases" != "" ]; then
     echo "subjectAltName=DNS:$domain,$aliases" | sed -e "s/,/,DNS:/g" > $scriptdir/multi.cnf
 else
-    echo > $scriptdir/multi.cnf
+   echo "subjectAltName=DNS:$domain" > $scriptdir/multi.cnf
 fi
 
 rm -f $certcsrdir/$domain.csr  2>&1 >/dev/null
 rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
 
 cat $certscriptdir/openssl.conf $scriptdir/multi.cnf > $scriptdir/sslconf.cnf
+
 openssl req -new -sha256 -key $certkeydir/$domain.key -out $certcsrdir/$domain.csr -config $scriptdir/sslconf.cnf -subj "/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
 
 echo $vapasswdInput | openssl x509 -req -days 365 -extfile $scriptdir/multi.cnf \

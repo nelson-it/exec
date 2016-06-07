@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     setgroups(0, NULL);
     setgid( 0 );
 
-   if ( chdir((char*)a["projectroot"]) < 0)
+   if ( chdir((char*)((std::string)a["projectroot"]).c_str()) < 0)
     {
         fprintf(stderr, "can't change to projectroot\n");
         exit (-1);
@@ -43,9 +43,9 @@ int main(int argc, char **argv)
     strcpy( (char *)va[0], (std::string("exec/system/shell/") + *largv).c_str());
 
     va[1] = (char*)"-locale";
-    va[2] = (char*)a["locale"];
+    va[2] = (char*)((std::string)a["locale"]).c_str();
     va[3] = (char*)"-project";
-    va[4] = (char*)a["project"];
+    va[4] = (char*)((std::string)a["project"]).c_str();
     va[5] = (char*)"-user";
     va[6] = pwd->pw_name;
 
@@ -58,6 +58,6 @@ int main(int argc, char **argv)
     va[i + 6] = NULL;
 
     execv( (std::string("exec/system/shell/") + *largv).c_str(), va);
-    fprintf(stderr, "command not found <%s>\n", (((std::string)((char*)a["projectroot"])) + "/exec/system/shell/" + *largv).c_str());
+    fprintf(stderr, "command not found <%s>\n", (((std::string)a["projectroot"]) + "/exec/system/shell/" + *largv).c_str());
     exit(-1);
 }
