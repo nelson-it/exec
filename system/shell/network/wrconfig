@@ -44,8 +44,8 @@ echo "$conf" >  $netinterfaces
 
 for device in `ls /sys/class/net`
 do
-  ifdown $device 2>/dev/null > /dev/null
-  ifup   $device 2>/dev/null > /dev/null
+  ifconfig $device down
+  ifconfig $device up
 done
 
 exit 0
