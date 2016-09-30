@@ -8,7 +8,7 @@
 find_script network check.sh
 
 DELETE="SELECT mne_system.network_del()"
-result=`get_data "$DELETE"`
+get_data "$DELETE" >&$logfile 2>&1
 
 devices=
 for device in `ls /sys/class/net`
@@ -34,7 +34,7 @@ do
       ' $netinterfaces`
 
     INSERT="SELECT mne_system.network_add('$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
-    result=`get_data "$INSERT"`;
+    result=`get_data "$INSERT"`
   
     if [ "$result" != 'ok' ]; then
         echo "error during inserting parameter" 1>&2

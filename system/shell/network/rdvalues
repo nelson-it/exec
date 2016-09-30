@@ -19,7 +19,7 @@ do
           mask=`ifconfig $device     | awk '/inet[^6]/ {gsub("^.*:", "", $4); print $4}'`
 
     INSERT="INSERT INTO mne_system.netdevice (netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime )";
-    get_data "$INSERT" 2>&1 > /dev/null;
+    get_data "$INSERT" >&$logfile 2>&1
   
   fi
 done
@@ -30,6 +30,6 @@ nameserver=`cat /etc/resolv.conf | awk 'BEGIN { found=0; } /^nameserver[ \t]/ { 
    domain=`hostname --domain`
   
 INSERT="INSERT INTO mne_system.netparam (netparamid, domain, nameserver, search, gw, createuser, createdate, modifyuser, modifydate ) VALUES ('0', '$domain', '$nameserver', '$search', '$gw', session_user, $acttime, session_user, $acttime )";
-get_data "$INSERT" 2>&1 > /dev/null;
+get_data "$INSERT" >&$logfile 2>&1;
   
 exit 0

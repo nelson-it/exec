@@ -26,6 +26,6 @@ get_conf "$conf"
 mv $apache2rootdir/ports.conf $apache2rootdir/ports.conf""_`date +"%d.%m.%Y_%H:%M:%S"`
 awk "$prog" "httpport=$port" "httpsport=$sport" $portfile > $apache2rootdir/ports.conf
 
-$apache2restart 2>&1 > /dev/null
+$apache2restart 1>&$logfile 2>&1
 
 exit $exit_status
