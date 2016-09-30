@@ -27,6 +27,16 @@ certcertdir=$certbasedir/cert
 
 certscriptdir=exec/system/shell/cert
 
+dhcpconfig=/etc/dhcp/dhclient.conf
+
+sambaroot=/opt/mne/samba
+sambabin=$sambaroot/bin
+sambasbin=$sambaroot/sbin
+sambaconf=/etc/mne/samba
+sambavar=/var/lib/mne/samba
+
+kerberosconfig=/etc/krb5.conf
+
 export PATH=/sbin:/usr/sbin:$PATH
 
 

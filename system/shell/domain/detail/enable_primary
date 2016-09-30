@@ -1,0 +1,91 @@
+#!/bin/bash
+
+i=`dpkg --get-selections mnesamba | fgrep install | wc -l`
+if [ ! "$i" = "1" ]; then
+    apt-get update >&$logfile 2>&1
+    apt-get -y install mnesamba >&$logfile 2>&1
+fi
+
+find_script domain/user read.sh
+find_template globalextra  domain/enable globalextra_primary.conf
+
+systemctl daemon-reload
+systemctl stop smb.service
+systemctl stop nmb.service
+
+systemctl disable smb.service
+systemctl disable nmb.service
+
+systemctl enable samba.service
+systemctl daemon-reload
+
+systemctl stop samba.service
+
+save_file $sambaconf/smb.conf
+save_file $dhcpconfig
+save_file /etc/hosts
+save_file $kerberosconfig
+
+rm_config
+
+# -------------------------------------------
+# check address is in /etc/hosts
+# -------------------------------------------
+addr=$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+add_host $addr $(hostname) $domain
+
+# -------------------------------------------
+# domain provision
+# -------------------------------------------
+samba-tool domain provision \
+    --option="interfaces=lo,$netdevice" \
+     --option="bind interfaces only=yes" \
+     --use-rfc2307 \
+     --use-xattrs=yes \
+     --realm="$domain" \
+     --domain="$workgroup" \
+     --server-role=dc \
+     --adminpass="$vaadminpasswordInput"
+
+mod_smbconf
+cp $globalextra $sambaconf/globalextra.conf
+
+samba-tool user setexpiry --noexpiry administrator
+samba-tool domain passwordsettings set --complexity=off
+samba-tool user create www-data --rfc2307-from-nss --random-password
+
+# -------------------------------------------
+# bekannte Benutzer hinzufügen
+# -------------------------------------------
+add_users
+systemctl restart samba.service
+
+# -------------------------------------------
+# check name-server in dhclient.conf
+# -------------------------------------------
+mod_dhclient $addr $domain
+
+# -------------------------------------------
+# resolv.conf konfigurieren
+# -------------------------------------------
+echo "nameserver $addr" > /etc/resolv.conf
+echo "domain $domain" >> /etc/resolv.conf
+echo "search $domain" >> /etc/resolv.conf
+
+# -------------------------------------------
+# check kerberos
+# -------------------------------------------
+cp $sambavar/private/krb5.conf $kerberosconfig
+
+sleep 2
+systemctl status samba.service
+
+udomain=$(echo "$domain"| awk '{print toupper($0)}')
+echo "$vaadminpasswordInput" | kinit  administrator@$udomain
+echo klist
+klist
+
+# -------------------------------------------
+# Grant share Rights to Domainadmins
+# -------------------------------------------
+#$sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -U"Administrator%$vaadminpasswordInput"

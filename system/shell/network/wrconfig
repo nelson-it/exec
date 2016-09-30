@@ -20,7 +20,7 @@ prog='/####DEVICE####/     { gsub(/####DEVICE####/,device); }
       /####BCAST####/      { if ( bcast == "" ) next; gsub(/####BCAST####/, bcast); }
       /####MASK####/       { if ( mask == "" ) next; gsub(/####MASK####/, mask); }
       /####GW####/         { if ( gw == "" ) next; gsub(/####GW####/, gw); }
-      /####NAMESERVER####/ { if ( domain == "" ) next; gsub(/####NAMESERVER####/, domain); }
+      /####NAMESERVER####/ { if ( nameserver == "" ) next; gsub(/####NAMESERVER####/, nameserver); }
       /####DOMAIN####/     { if ( domain == "" ) next; gsub(/####DOMAIN####/, domain); }
       /####SEARCH####/     { if ( search == "" ) next; gsub(/####SEARCH####/, search); }
                            { print $0 }'

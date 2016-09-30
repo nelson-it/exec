@@ -145,7 +145,8 @@ get_data "$getname" $repositoryid | \
          fi
 
          mailid=`get_data "SELECT mne_catalog.mk_id()"`;
-         linkid=$mailid`cat /dev/urandom|tr -dc "a-zA-Z0-9"|fold -w 128 |head -1`
+         linkid=$mailid$(dd if=/dev/urandom bs=2048 count=1 2>/dev/null |tr -dc "a-zA-Z0-9"|fold -w 128 |head -1)
+         
          get_data "$updatelinkid" $mailid $repositoryid $personid $linkid >/dev/null 2>&1
          
          link="$url/db/utils/trust/repfiles.zip?id=$linkid"
@@ -210,6 +211,8 @@ get_data "$getname" $repositoryid | \
 result=$?
 if [ "$result" = "0" ]; then
     echo '<?xml version="1.0" encoding="utf-8"?><result><body>ok</body>'
+else
+    echo '<?xml version="1.0" encoding="utf-8"?><result><body>notok</body>'
 fi
 
 sleep 0

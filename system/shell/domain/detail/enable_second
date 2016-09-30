@@ -1,0 +1,80 @@
+#!/bin/bash
+
+i=`dpkg --get-selections mnesamba | fgrep install | wc -l`
+if [ ! "$i" = "1" ]; then
+    apt-get update >&$logfile 2>&1
+    apt-get -y install mnesamba >&$logfile 2>&1
+fi
+
+
+systemctl daemon-reload
+systemctl stop smb.service
+systemctl stop nmb.service
+
+systemctl disable smb.service
+systemctl disable nmb.service
+
+systemctl enable samba.service
+systemctl daemon-reload
+
+save_file $sambaconf/smb.conf
+save_file $dhcpconfig
+save_file /etc/hosts
+save_file $kerberosconfig
+
+# -------------------------------------------
+# check PDC address is in /etc/hosts
+# -------------------------------------------
+add_host $primaryaddr $primaryname $domain
+addr="$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)"
+add_host $addr $(hostname) $domain
+
+# -------------------------------------------
+# modify resolv.conf
+# -------------------------------------------
+echo "nameserver $primaryaddr" > /etc/resolv.conf
+echo "domain $domain" >> /etc/resolv.conf
+echo "search $domain" >> /etc/resolv.conf
+
+# -------------------------------------------
+# check kerberos
+# -------------------------------------------
+udomain=$(echo "$domain"| awk '{print toupper($0)}')
+mod_kerberos $udomain
+
+admin=$vaadminInput
+if [ "$admin" = "" ];then
+  admin=administrator
+fi
+echo "$vaadminpasswordInput" | kinit  $admin@$udomain
+echo klist
+klist
+
+# -------------------------------------------
+# domain provision
+# -------------------------------------------
+rm_config
+samba-tool domain join $domain DC \
+    --option="interfaces=lo,$netdevice" \
+    --option="bind interfaces only=yes" \
+    --realm="$domain" -U"$admin" \
+    --password="$vaadminpasswordInput"
+
+mod_smbconf
+cp $globalextra $sambaconf/globalextra.conf
+systemctl start samba.service
+
+samba-tool user setexpiry --noexpiry administrator
+samba-tool domain passwordsettings set --complexity=off
+
+# -------------------------------------------
+# check name-server in dhclient.conf
+# -------------------------------------------
+mod_dhclient $addr $domain
+
+# -------------------------------------------
+# modifiziere resolv.conf
+# -------------------------------------------
+echo "nameserver $addr" > /etc/resolv.conf
+echo "domain $domain" >> /etc/resolv.conf
+echo "search $domain" >> /etc/resolv.conf
