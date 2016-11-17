@@ -26,7 +26,7 @@ if [ "$ALLGREADED" = "" ]; then
         fi
       
         echo "error found: " 1>&$stderr
-        echo "error in: $0" 1>&$logfile
+        echo "error in: $scriptdir" 1>&$logfile
         echo "     cmd: $1" 1>&2
         echo "    line: $2" 1>&2
         echo "  status: $3" 1>&2
@@ -78,7 +78,27 @@ if [ "$ALLGREADED" = "" ]; then
         echo "$1"| awk '{printf("%s%s", toupper(substr($0,0,1)), tolower(substr($0,2))) }'
     }
     
+    function pg_adduser()
+    {
+        su - postgres -c "echo \"CREATE ROLE $1; ALTER ROLE $1 LOGIN;\" | psql >$logfile 2>&1; exit 0"; 
+    }
+    
+    function pg_addaccess()
+    {
+  
+      egrep $1 $pgconf/pg_hba.conf >$logfile 2>&1
+      if [ ! "$?" = "0" ]; then
+        mv  $pgconf/pg_hba.conf $pgconf/pg_hba.conf.orig 
+
+        echo "$2"                      > $pgconf/pg_hba.conf
+        cat $pgconf/pg_hba.conf.orig  >> $pgconf/pg_hba.conf
+        chown postgres:postgres $pgconf/pg_hba.conf
+        su - postgres -c "$(pg_config --bindir)/pg_ctl reload -D $pgconf" >$logfile 2>&1
+      fi
+    }
+
     export LANG=C
+    umask 0022
     
     bs='\\'
     
@@ -91,14 +111,13 @@ if [ "$ALLGREADED" = "" ]; then
     stdout=3
     stderr=4
     logfile=5
-    log=/var/log/mne_system.log
+    log=/var/log/mne_erp/system.log
     
     exec 3>&1
     exec 4>&2
     
     exec 2> >( tee -ia ${log} 1>&2 )
     exec 1> >( tee -ia ${log} )
-    #exec 5> >( sed "s/^/$(date '+%F %T')  : /" >> ${log})
     exec 5> >( tee -ia ${log} 1>/dev/null )
     
     echo `date` ===================================================================== 1>&$logfile
@@ -188,3 +207,8 @@ if [ "$ALLGREADED" = "" ]; then
     fi
 
 fi
+
+if [ -f "$scriptdir/check.sh" ]; then
+    . $scriptdir/check.sh
+fi
+

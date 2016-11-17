@@ -15,8 +15,10 @@ if [ "$description" = "" ]; then
     description="%h server (Samba, Ubuntu)"
 fi
 
+udomain=$(echo "$domain"| awk '{print toupper($0)}')
+
 export PATH=$sambabin:$sambasbin:$PATH
 
 . $scriptdir/functions
 . $scriptdir/enable_$typ
-. $scriptdir/../share/enable
+. $scriptdir/../dhcp/enable

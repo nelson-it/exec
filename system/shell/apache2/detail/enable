@@ -20,8 +20,8 @@ prog='/####HTTPPORT####/  { gsub(/####HTTPPORT####/, httpport);  }
       /####HTTPSPORT####/ { gsub(/####HTTPSPORT####/,httpsport); }
                           { print $0 }'
 
-conf=`get_data "$getconf"`
-get_conf "$conf"
+conf=`get_data "$apacheconf"`
+apache_conf "$conf"
 
 mv $apache2rootdir/ports.conf $apache2rootdir/ports.conf""_`date +"%d.%m.%Y_%H:%M:%S"`
 awk "$prog" "httpport=$port" "httpsport=$sport" $portfile > $apache2rootdir/ports.conf

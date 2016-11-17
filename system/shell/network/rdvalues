@@ -5,8 +5,6 @@
 
 . exec/system/shell/allg/db.sh
 
-find_script network check.sh
-
 acttime=`date +%s`
 DELETE="SELECT mne_system.netdevice_del()"
 result=`get_data "$DELETE"`
@@ -17,6 +15,7 @@ do
           addr=`ifconfig $device     | awk '/inet[^6]/ {gsub("^.*:", "", $2); print $2}'`
          bcast=`ifconfig $device     | awk '/inet[^6]/ {gsub("^.*:", "", $3); print $3}'`
           mask=`ifconfig $device     | awk '/inet[^6]/ {gsub("^.*:", "", $4); print $4}'`
+          
 
     INSERT="INSERT INTO mne_system.netdevice (netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime )";
     get_data "$INSERT" >&$logfile 2>&1

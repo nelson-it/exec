@@ -1,6 +1,6 @@
 #!/bin/bash
 
-i=`dpkg --get-selections mnesamba | fgrep install | wc -l`
+i=`dpkg --get-selections mnesamba | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     apt-get update >&$logfile 2>&1
     apt-get -y install mnesamba >&$logfile 2>&1
@@ -61,11 +61,9 @@ samba-tool domain join $domain DC \
     --password="$vaadminpasswordInput"
 
 mod_smbconf
+mod_netpar
 cp $globalextra $sambaconf/globalextra.conf
 systemctl start samba.service
-
-samba-tool user setexpiry --noexpiry administrator
-samba-tool domain passwordsettings set --complexity=off
 
 # -------------------------------------------
 # check name-server in dhclient.conf

@@ -59,5 +59,6 @@ int main(int argc, char **argv)
 
     execv( (std::string("exec/system/shell/") + *largv).c_str(), va);
     fprintf(stderr, "command not found <%s>\n", (((std::string)a["projectroot"]) + "/exec/system/shell/" + *largv).c_str());
+    fflush(stderr);
     exit(-1);
 }

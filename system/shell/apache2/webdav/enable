@@ -3,7 +3,6 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-find_script apache2/webdav check.sh
 find_script apache2/webdav read.sh
 
 find_template conffile      apache2/webdav webdav.conf

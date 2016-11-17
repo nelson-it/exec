@@ -17,26 +17,35 @@ chown -R root:$daemonuser $certkeydir
 chown -R root:$daemonuser $certcertdir
 chown -R root:$daemonuser $certcsrdir
 
-chmod 750 $certcadir
-chmod 750 $certkeydir
-chmod 750 $certcertdir
-chmod 750 $certcsrdir
+chmod 770 $certcadir
+chmod 770 $certkeydir
+chmod 770 $certcertdir
+chmod 770 $certcsrdir
 
 conf=`get_data "$getcertconf"`
 get_certconf "$conf"
 
 if [ -f $certcadir/ca.crt ]; then
     chmod 600 $certcadir/ca.key
-    chmod 640 $certcadir/ca.crt
+    chmod 644 $certcadir/ca.crt
     if [ "$vaoverwriteInput" != "1" ]; then
         echo "Key allready exists";
-       exit 0
+    else
+        echo $vapasswdInput | openssl genrsa -des3 -passout stdin -out $certcadir/ca.key 4096 > /dev/null 2>&1
+        echo $vapasswdInput | openssl req -new -x509 -days 3650 -passin stdin -key $certcadir/ca.key -out $certcadir/ca.crt -config $scriptdir/../openssl.conf -extensions v3_ca -subj "/CN=$org CA/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
     fi
+else
+    echo $vapasswdInput | openssl genrsa -des3 -passout stdin -out $certcadir/ca.key 4096 > /dev/null 2>&1
+    echo $vapasswdInput | openssl req -new -x509 -days 3650 -passin stdin -key $certcadir/ca.key -out $certcadir/ca.crt -config $scriptdir/../openssl.conf -extensions v3_ca -subj "/CN=$org CA/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
 fi
 
-echo $vapasswdInput | openssl genrsa -des3 -passout stdin -out $certcadir/ca.key 4096 > /dev/null 2>&1
-echo $vapasswdInput | openssl req -new -x509 -days 3650 -passin stdin -key $certcadir/ca.key -out $certcadir/ca.crt -config $scriptdir/../openssl.conf -extensions v3_ca -subj "/CN=$org CA/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
-
 domain=`hostname`
-aliases=`hostname --all-fqdns | sed -e 's/ *$//' -e "s/ /,/g"`
+aliases=$(hostname --all-fqdns | sed -e 's/ *$//' -e "s/ /,/g")
 . exec/system/shell/cert/http/mkcert
+
+mne_error_ignore=1
+rm /usr/local/share/ca-certificates/mne_erpca.crt >/dev/null 2>&1
+mne_error_ignore=
+ln -s $certcadir/ca.crt /usr/local/share/ca-certificates/mne_erpca.crt
+update-ca-certificates
+

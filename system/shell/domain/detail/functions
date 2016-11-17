@@ -24,34 +24,87 @@ function add_users()
   get_data "$getuser" | \
   while read line; 
   do
-     get_user "$line"
-     mne_error_ignore=1
-     id $user 1>&$logfile 2>&1
-     result=$?
-     mne_error_ignore=
+    get_user "$line"
      
-     if [ "$result" = "0" ]; then
-         $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss
-     else
-         $sambabin/samba-tool user create "$user" --random-password
-     fi
+    option=
+    if [ ! "$uid" = "" ]; then
+      option="--uid-number=$uid"
+    fi
+     
+    mne_error_ignore=1
+    id $user 1>&$logfile 2>&1
+    result=$?
+    mne_error_ignore=
+     
+    if [ "$result" = "0" ]; then
+      $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss  $option
+    else
+      $sambabin/samba-tool user create "$user" --random-password  $option
+    fi
+    samba-tool user setexpiry --noexpiry "$user"
+    
   done
+}
+
+function mod_bind()
+{
+  fgrep "/var/lib/mne/samba/private/named.conf" $bindconf/named.conf 1>&$logfile 2>&1
+  if [ "$?" != "0" ];then
+    save_file $bindconf/named.conf
+    echo "include \"/var/lib/mne/samba/private/named.conf\";" >> $bindconf/named.conf
+  fi
+  
+  fgrep "dns.keytab" $bindconf/named.conf.options 1>&$logfile 2>&1
+  if [ "$?" != "0" ];then
+    save_file $bindconf/named.conf.options
+    sed -e  '/options  *{/a\ \ \ \ \ \ \ \ tkey-gssapi-keytab "/var/lib/mne/samba/private/dns.keytab";' $bindconf/named.conf.options > /tmp/bindoption.$$
+    mv /tmp/bindoption.$$ $bindconf/named.conf.options
+  fi
+  
+  chmod 640 /var/lib/mne/samba/private/dns.keytab
+  chown root:bind /var/lib/mne/samba/private/dns.keytab
+  chown root:bind /var/lib/mne/samba/private/named.conf
+  
+  
 }
 
 function mod_dhclient()
 {
-if [ -f $dhcpconfig ]; then
-	sed -e "\$a\\
-# mnesamba_conf start\\
-supersede domain-name-servers $1;\\
-supersede domain-name \"$2\";\\
-supersede domain-search \"$2\";\\
-# mnesamba_conf end" < $dhcpconfig > /tmp/dhclient.$$
-
+  if [ -f $dhcpconfig ]; then
+    find_template dhcpconfadd domain/enable dhcpconf_add.conf
+    prog=' /####DOMAIN####/     { gsub(/####DOMAIN####/,domain); }
+           /####NAMESERVER####/ { gsub(/####NAMESERVER####/,nameserver); }
+                                { print $0 }'
+    
+	sed -e "/mnesamba_conf start/,/mnesamba_conf end/d" < $dhcpconfig > /tmp/dhclient.$$
     mv /tmp/dhclient.$$ $dhcpconfig
-fi
-
+    awk "$prog" "domain=$2" "nameserver=$1" $dhcpconfadd >> $dhcpconfig
+  fi
 }
+
+function mod_appamor_dhcp()
+{
+    sed -e "s/^.*include <dhcpd.d>/  include <dhcpd.d>/" < $apparmorconf/usr.sbin.dhcpd > /tmp/dhcpd.$$
+    mv /tmp/dhcpd.$$ /etc/apparmor.d/usr.sbin.dhcpd
+}
+
+function mod_appamor_bind()
+{
+    fgrep "usr.sbin.named.mnesamba" $apparmorconf/usr.sbin.named 1>&$logfile 2>&1
+    if [ "$?" != "0" ];then
+        sed -e '/^.*include <local\/usr.sbin.named>/a\ \ include <local/usr.sbin.named.mnesamba>' <  $apparmorconf/usr.sbin.named > /tmp/named.$$
+        mv /tmp/named.$$  $apparmorconf/usr.sbin.named
+    fi
+
+    echo "/opt/mne/samba/lib/** rm,"                >  $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/etc/mne/samba/** r,"                     >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/dns.keytab r," >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/named.conf r," >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/dns/** rwk,"   >> $apparmorconf/local/usr.sbin.named.mnesamba
+    
+    systemctl restart apparmor
+}
+
 
 function mod_smbconf()
 {
@@ -59,6 +112,7 @@ function mod_smbconf()
    /^[    ]*$|^\[/  { if ( start == 1 )
                     {
                       print \"        include = $sambaconf/globalextra.conf\";
+                      print \"        include = $sambaconf/dnsforward.conf\";
                       print \"        include = $sambaconf/dhcp.conf\";
                       start = 2;
                      }
@@ -71,7 +125,20 @@ function mod_smbconf()
     
     touch $sambaconf/globalextra.conf;
     touch $sambaconf/dhcp.conf;
+    touch $sambaconf/dnsforward.conf;
     touch $sambaconf/shares.conf;
+}
+
+function mod_netpar()
+{
+    sed -e "/interfaces =/s@interfaces.*\$@interfaces = lo $netdevice@" < $sambaconf/smb.conf  > /tmp/smb.$$; 
+    mv /tmp/smb.$$ $sambaconf/smb.conf;
+    
+    if [ "$dnsforwarder" != "" ]; then
+        echo "         dns forwarder = $dnsforwarder" > $sambaconf/dnsforward.conf;
+    else
+        echo "" > $sambaconf/dnsforward.conf;
+    fi
 }
 
 function mod_kerberos()
@@ -109,6 +176,11 @@ function rm_config()
     if [ -f $dhcpconfig ]; then
         sed -e "/mnesamba_conf start/,/mnesamba_conf end/d" < $dhcpconfig > /tmp/dhclient.$$
         mv /tmp/dhclient.$$ $dhcpconfig
+    fi
+
+    if [ -f $bindconf/named.conf ]; then
+        sed -e "/\/var\/lib\/mne\/samba/d" < $bindconf/named.conf > /tmp/named.$$
+        mv /tmp/named.$$ $bindconf/named.conf
     fi
 
     mne_ignore_error=1

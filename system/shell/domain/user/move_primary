@@ -2,12 +2,6 @@
 
 mne_error_ignore=1
 $sambabin/samba-tool user delete $olduser >&$logfile 2>&1
-id $user 1>&$logfile 2>&1
-result=$?
 mne_error_ignore=
 
- if [ "$result" = "0" ]; then
-     $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss
- else
-     $sambabin/samba-tool user create "$user" --random-password
- fi
+. $scriptdir/add_primary

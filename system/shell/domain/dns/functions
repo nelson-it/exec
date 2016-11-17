@@ -1,0 +1,64 @@
+#!/bin/bash
+
+function check_passwd()
+{
+kinit -F -k -t /etc/mne/dns/dns.keytab dnsadmin@$(echo ${domain^^})
+}
+
+function read_domain()
+{
+find_script domain/detail read.sh
+domainconf=`get_data "$getdomain"`
+get_domain "$domainconf"
+
+export PATH=$sambabin:$sambasbin:$PATH
+
+}
+
+function read_mac()
+{
+    if [ "$macaddr" = "" ];then
+      mne_error_ignore=1
+      arp -an "$name" 1>&$logfile 2>&1
+      if [ "$?" != "0" ];then
+        ping -c 1 $name 1>&$logfile 2>&1
+      fi
+      macaddr=$(arp -an $name 2> /dev/null | sed -e 's/  */ /g' | cut -f4 -d' ')
+      if [ "$macaddr" == "entries" ]; then
+        macaddr=
+      fi
+      mne_error_ignore=
+    fi
+}
+
+function read_addresses()
+{
+  cmd=$(echo 'addranzahl=0'; get_data "$getalladdress" | \
+    while read line;
+    do
+      get_dnsaddress "$line"
+      echo dnsid[\$addranzahl]=\"$dnsaddressid\"
+      echo adr[\$addranzahl]=\"$address\"
+      echo rec[\$addranzahl]=\"$record\"
+      echo nam[\$addranzahl]=\"$name\"
+      echo mac[\$addranzahl]=\"$macaddr\"
+      echo let addranzahl=addranzahl+1
+    done;)
+    
+    eval "$cmd"
+}
+
+function find_address()
+{
+  local i=0
+  while [ "$i" -lt "$addranzahl" ]
+  do
+      if [ "${nam[$i]}" = "$1" ] && [ "${rec[$i]}" = "$2" ] && [ "${adr[$i]}" = "$3" ]; then
+         addrindex=$i
+         return 0
+      fi
+      let i=i+1
+  done
+  addrindex=$i
+  return 0;
+}

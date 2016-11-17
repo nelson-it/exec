@@ -3,18 +3,22 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-option=
-if [ ! "$uid" = "" ]; then
+$sambabin/samba-tool user list | egrep "^$user\$" >/dev/null
+if [ ! "$?" = "0" ]; then
+
+  option=
+  if [ ! "$uid" = "" ]; then
     option="--uid-number=$uid"
-fi
+  fi
 
-mne_error_ignore=1
-uid=$(id -u $user 2>&$logfile)
-result=$?
-mne_error_ignore=
+  mne_error_ignore=1
+  uid=$(id -u $user 2>&$logfile)
+  result=$?
+  mne_error_ignore=
 
- if [ "$result" = "0" ]; then
-     $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss $option
- else
-     $sambabin/samba-tool user create "$user" --random-password $option
+  if [ "$result" = "0" ]; then
+    $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss $option
+  else
+    $sambabin/samba-tool user create "$user" --random-password $option
  fi
+fi

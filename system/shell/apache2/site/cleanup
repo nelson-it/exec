@@ -3,7 +3,6 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-find_script apache2/site check.sh
 find_script apache2/site read.sh
 
 exit_status=0
@@ -42,6 +41,4 @@ do
 done
 
 $apache2restart  2>&1 > /dev/null
-
-exit $exit_status
 

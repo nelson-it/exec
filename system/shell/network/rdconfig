@@ -5,8 +5,6 @@
 
 . exec/system/shell/allg/db.sh
 
-find_script network check.sh
-
 DELETE="SELECT mne_system.network_del()"
 get_data "$DELETE" >&$logfile 2>&1
 

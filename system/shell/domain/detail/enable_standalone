@@ -2,7 +2,7 @@
 
 find_template conffile domain/enable smb_$typ.conf
 
-i=`dpkg --get-selections mnesamba | fgrep install | wc -l`
+i=`dpkg --get-selections mnesamba | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     apt-get update > /dev/null 2>&1
     apt-get install mnesamba > /dev/null 2>&1
