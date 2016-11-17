@@ -10,6 +10,10 @@ find_script apache2/site read.sh
 get_ports `get_data "$getports"`
 get_rootfolder `get_data "$getrootfolder"`
 
+if [ "$location" = "" ]; then
+  location='keine location'
+fi
+
 dataroot=`echo "$DATAROOT" | sed -e "s@/@$bs/@g"`
 datalocation=`echo "$DATAROOT$location" | sed -e "s@/@$bs/@g"`
 
@@ -23,7 +27,7 @@ do
     fi
 
           domain=`awk '/^[ \t]*#/ { next } tolower($1) ~ /servername/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
-         aliases=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveralias/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
+         aliases=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveralias/ { gsub($1,""); sub(/^ */,""); print $0; exit; }' $apache2rootdir/sites-available/$site`
            email=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveradmin/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
     documentroot=`awk '/^[ \t]*#/ { next } tolower($1) ~ /documentroot/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
     
@@ -38,12 +42,19 @@ do
         httpsonly=false
     fi
     
-    dr=`echo $documentroot | sed -e "s@/@$bs/@g"`
+    if [ "$documentroot" = "" ]; then
+        dr='leer';
+    else
+       dr=`echo $documentroot | sed -e "s@/@$bs/@g"`
+    fi
+    
     conf=`cat $apache2rootdir/sites-available/$site | sed -e "s/$bs/$bs$bs/g"\
                                                           -e "s/'/$bs'/g" -e "s/\n/$bs""n/g" \
                                                           -e "s/\(^[^#]*[Ss]erver[Aa]dmin\).*/\1 ####EMAIL####/" \
                                                           -e "s/\(^[^#]*[Ss]erver[Aa]lias\).*/\1 ####ALIAS####/" \
                                                           -e "s/\(^[^#]*[Ss]erver[Nn]ame\).*/\1 ####DOMAIN####/" \
+                                                          -e "s/\(^[^#]*[Ee]rror[Ll]og.*\)$name\.log/\1####NAME####.log/" \
+                                                          -e "s/\(^[^#]*[Cu]stom[Ll]og.*\)$name\.log/\1####NAME####.log/" \
                                                           -e "s/\(^[^#]*Directory\).*$datalocation.*/\1 ####DATAROOT########DOCUMENTROOT####>/" \
                                                           -e "s/\(^[^#]*Directory\).*$dr.*/\1 ####DOCUMENTROOT####>/" \
                                                           -e "s/\(^[^#]*[Dd]ocument[Rr]oot\).*$datalocation.*/\1 ####DATAROOT########DOCUMENTROOT####/" \

@@ -2,7 +2,7 @@
 
 . exec/system/shell/allg/db.sh
 
-getdomain="SELECT domain, workgroup, typ, description, netdevice, primaryname, primaryaddr FROM mne_system.domain;"
+getdomain="SELECT domain, workgroup, typ, description, netdevice, primaryname, primaryaddr, dnsforwarder, dhcpstart, dhcpend FROM mne_system.domain;"
 get_domain()
 {
     par=$1
@@ -13,4 +13,7 @@ get_domain()
     netdevice=${par/%%%%*}; par=${par#*%%%%}
     primaryname=${par/%%%%*}; par=${par#*%%%%}
     primaryaddr=${par/%%%%*}; par=${par#*%%%%}
+    dnsforwarder=${par/%%%%*}; par=${par#*%%%%}
+    dhcpstart=${par/%%%%*}; par=${par#*%%%%}
+    dhcpend=${par/%%%%*}; par=${par#*%%%%}
 }

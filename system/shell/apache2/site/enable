@@ -3,7 +3,6 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-find_script apache2/site check.sh
 find_script apache2/site read.sh
 find_script cert/ca read.sh
 

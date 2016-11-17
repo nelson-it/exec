@@ -1,6 +1,6 @@
 #!/bin/bash
 
-i=`dpkg --get-selections mnesamba | fgrep install | wc -l`
+i=`dpkg --get-selections mnesamba | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     apt-get update >&$logfile 2>&1
     apt-get -y install mnesamba >&$logfile 2>&1
@@ -9,6 +9,24 @@ fi
 find_script domain/user read.sh
 find_template globalextra  domain/enable globalextra_primary.conf
 
+# -------------------------------------------
+# permission certifikat files
+# -------------------------------------------
+chown root:root $certkeydir/$(hostname).key
+
+chmod 600 $certkeydir/$(hostname).key
+chmod 644 $certcertdir/$(hostname).crt
+chmod 644 $certcadir/ca.crt
+
+mne_error_ignore=1
+rm /usr/local/share/ca-certificates/mne_erpca.crt >/dev/null 2>&1
+mne_error_ignore=
+ln -s $certcadir/ca.crt /usr/local/share/ca-certificates/mne_erpca.crt
+update-ca-certificates
+
+# -------------------------------------------
+# bereinigen
+# -------------------------------------------
 systemctl daemon-reload
 systemctl stop smb.service
 systemctl stop nmb.service
@@ -45,20 +63,45 @@ samba-tool domain provision \
      --realm="$domain" \
      --domain="$workgroup" \
      --server-role=dc \
+     --dns-backend=BIND9_DLZ \
      --adminpass="$vaadminpasswordInput"
 
 mod_smbconf
-cp $globalextra $sambaconf/globalextra.conf
+mod_bind
+mod_netpar
+mod_appamor_bind
+
+prog='/####CERTCERTDIR####/     { gsub(/####CERTCERTDIR####/,certcertdir); }
+      /####CERTKEYDIR####/      { gsub(/####CERTKEYDIR####/,certkeydir); }
+      /####CERTCADIR####/       { gsub(/####CERTCADIR####/,certcadir); }
+      /####HOST####/            { gsub(/####HOST####/,host); }
+                             { print $0 }'
+
+awk "$prog" "host=$(hostname)" "certcertdir=$certcertdir" "certkeydir=$certkeydir" "certcadir=$certcadir" < $globalextra > $sambaconf/globalextra.conf
 
 samba-tool user setexpiry --noexpiry administrator
 samba-tool domain passwordsettings set --complexity=off
-samba-tool user create www-data --rfc2307-from-nss --random-password
+samba-tool domain passwordsettings set --min-pwd-length=1
+
+samba-tool user create www-data --rfc2307-from-nss --random-password --description="Unprivileged user for Webservices"
+samba-tool user setexpiry --noexpiry www-data
+
+mkdir -p /etc/mne/dns
+chmod 755 /etc/mne/dns
+samba-tool user create dnsadmin                    --random-password --description="Unprivileged user for DNS Admin"
+samba-tool user setexpiry --noexpiry  dnsadmin
+samba-tool group addmembers DnsAdmins dnsadmin
+
+samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab
+chown root:dhcpd /etc/mne/dns/dns.keytab
+chmod 440 /etc/mne/dns/dns.keytab
 
 # -------------------------------------------
 # bekannte Benutzer hinzufügen
 # -------------------------------------------
 add_users
 systemctl restart samba.service
+systemctl restart bind9.service
 
 # -------------------------------------------
 # check name-server in dhclient.conf
@@ -80,7 +123,6 @@ cp $sambavar/private/krb5.conf $kerberosconfig
 sleep 2
 systemctl status samba.service
 
-udomain=$(echo "$domain"| awk '{print toupper($0)}')
 echo "$vaadminpasswordInput" | kinit  administrator@$udomain
 echo klist
 klist
@@ -88,4 +130,5 @@ klist
 # -------------------------------------------
 # Grant share Rights to Domainadmins
 # -------------------------------------------
-#$sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -U"Administrator%$vaadminpasswordInput"
+#$sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -k
+

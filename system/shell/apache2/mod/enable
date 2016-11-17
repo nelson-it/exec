@@ -3,7 +3,6 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-find_script apache2/mod check.sh
 find_script apache2/mod read.sh
 
 exit_status=0

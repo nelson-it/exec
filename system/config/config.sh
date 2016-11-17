@@ -1,7 +1,10 @@
 #!/bin/bash
 
+export PATH=/sbin:/usr/sbin:$PATH
 
 psql=/usr/bin/psql
+pgversion="$(pg_config --version | egrep -o '[0-9]{1,}\.[0-9]{1,}')"
+pgconf="/etc/postgresql/$pgversion/main/"
 
 apache2rootdir=/etc/apache2
 
@@ -27,7 +30,11 @@ certcertdir=$certbasedir/cert
 
 certscriptdir=exec/system/shell/cert
 
+dhcpconf=/etc/dhcp
 dhcpconfig=/etc/dhcp/dhclient.conf
+
+bindconf=/etc/bind
+apparmorconf=/etc/apparmor.d
 
 sambaroot=/opt/mne/samba
 sambabin=$sambaroot/bin
@@ -37,8 +44,5 @@ sambavar=/var/lib/mne/samba
 
 kerberosconfig=/etc/krb5.conf
 
-export PATH=/sbin:/usr/sbin:$PATH
-
-
-
-
+dovecotconf=/etc/dovecot
+postfixconf=/etc/postfix

@@ -7,7 +7,7 @@ if [ ! -e $certkeydir/$domain.key ]; then
 fi
 
 if [ "$aliases" != "" ]; then
-    echo "subjectAltName=DNS:$domain,$aliases" | sed -e "s/,/,DNS:/g" > $scriptdir/multi.cnf
+    echo "subjectAltName=DNS:$domain,$aliases" | sed -e "s/ /,/g" -e "s/,/,DNS:/g" > $scriptdir/multi.cnf
 else
    echo "subjectAltName=DNS:$domain" > $scriptdir/multi.cnf
 fi
@@ -25,6 +25,8 @@ echo $vapasswdInput | openssl x509 -req -days 365 -extfile $scriptdir/multi.cnf 
 if [ "$?" != "0" ]; then
     rm -f $certcsrdir/$domain.csr  2>&1 >/dev/null
     rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
+else
+    chmod 644 $certcertdir/$domain.crt
 fi   
 
 rm -f $scriptdir/multi.cnf
