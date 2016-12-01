@@ -5,18 +5,20 @@ function add_host()
     local addr=$1
     local hostname=$2
     local domain=$3
+    local prog='BEGIN         { printf("'$addr' '$hostname' '$hostname'.'$domain'\n"); }
+                /'$hostname'/ { for( i=2; i<=NF; i++ )
+                                {
+                                  names = ""
+                                  if ( index($i, "'$hostname'") != 1 && index($i, "'$hostname'.") !=1 )
+                                    names = names + " " + $i; 
+                                };
+                                if ( names != "" )
+                                printf("%s %s\n", $1, names); next;
+                              }
+                              { print $0 }'
 
-    egrep "$(echo $addr | sed -e 's@\.@\\.@g')[ 	]+$hostname.$domain" /etc/hosts >&$logfile 2>&1
-    if [ ! "$?" = "0" ]; then
-      egrep "^[ 	]*[^#].*$hostname.$domain" /etc/hosts >&$logfile 2>&1
-      if [ "$?" = "0" ];then
-          sed -e "s/^[ 	]*\([^ 	]\{1,\}\)\(.*$hostname\.$domain\)/$(echo $addr | sed -e 's@\.@\\.@g')\2/1" < /etc/hosts > /tmp/hosts$$
-      else
-          sed -e "1i$addr    $hostname.$domain $hostname" < /etc/hosts > /tmp/hosts$$
-      fi
-      mv /tmp/hosts$$ /etc/hosts
-    fi
-
+    awk "$prog" < /etc/hosts > /tmp/hosts$$
+    mv /tmp/hosts$$ /etc/hosts
 }
 
 function add_users()
@@ -39,7 +41,16 @@ function add_users()
     if [ "$result" = "0" ]; then
       $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss  $option
     else
-      $sambabin/samba-tool user create "$user" --random-password  $option
+     if [ "$option" = "" ]; then
+       lastuid=$(getent passwd | fgrep "$workgroup" | cut -f3 -d: | sort -n | tail -1)
+       if [ "$lastuid" != "" ]; then
+         let lastuid=lastuid+1
+         option="--uid-number=$lastuid"
+       else
+         option="--uid-number=30000"
+       fi
+     fi
+       $sambabin/samba-tool user create "$user" --random-password  $option
     fi
     samba-tool user setexpiry --noexpiry "$user"
     
@@ -131,14 +142,24 @@ function mod_smbconf()
 
 function mod_netpar()
 {
+    sed -e '/^passwd:/s@ *winbind@@' -e '/^passwd:/s@$@ winbind@' -e '/^group:/s@ *winbind@@' -e '/^group:/s@$@ winbind@' < /etc/nsswitch.conf  > /tmp/nsswitch.$$
+    mv /tmp/nsswitch.$$ /etc/nsswitch.conf
+    
     sed -e "/interfaces =/s@interfaces.*\$@interfaces = lo $netdevice@" < $sambaconf/smb.conf  > /tmp/smb.$$; 
     mv /tmp/smb.$$ $sambaconf/smb.conf;
+    
+    sed -e "/TLS_REQCERT/d" < $ldapconf/ldap.conf  > /tmp/ldap.$$; 
+    mv /tmp/ldap.$$ $ldapconf/ldap.conf;
+    echo "" >> $ldapconf/ldap.conf
+    echo "TLS_REQCERT allow" >> $ldapconf/ldap.conf
     
     if [ "$dnsforwarder" != "" ]; then
         echo "         dns forwarder = $dnsforwarder" > $sambaconf/dnsforward.conf;
     else
         echo "" > $sambaconf/dnsforward.conf;
     fi
+    
+    
 }
 
 function mod_kerberos()

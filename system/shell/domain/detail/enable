@@ -16,6 +16,7 @@ if [ "$description" = "" ]; then
 fi
 
 udomain=$(echo "$domain"| awk '{print toupper($0)}')
+domaindn=$(echo $domain | sed -e "s/^/dc=/" -e "s/\./,dc=/g")
 
 export PATH=$sambabin:$sambasbin:$PATH
 

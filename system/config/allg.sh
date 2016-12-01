@@ -111,7 +111,7 @@ if [ "$ALLGREADED" = "" ]; then
     stdout=3
     stderr=4
     logfile=5
-    log=/var/log/mne_erp/system.log
+    log=/var/log/mne/system.log
     
     exec 3>&1
     exec 4>&2

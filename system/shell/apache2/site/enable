@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+vapasswordInputignore=1
+
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
