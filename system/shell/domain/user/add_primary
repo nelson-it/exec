@@ -19,6 +19,16 @@ if [ ! "$?" = "0" ]; then
   if [ "$result" = "0" ]; then
     $sambabin/samba-tool user create "$user" --random-password --rfc2307-from-nss $option
   else
+     if [ "$option" = "" ]; then
+       lastuid=$(getent passwd | fgrep "$workgroup" | cut -f3 -d: | sort -n | tail -1)
+       if [ "$lastuid" != "" ]; then
+         let lastuid=lastuid+1
+         option="--uid-number=$lastuid"
+       else
+         option="--uid-number=30000"
+       fi
+     fi
+     
     $sambabin/samba-tool user create "$user" --random-password $option
  fi
 fi

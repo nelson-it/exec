@@ -20,6 +20,7 @@ fi
 samba-tool user setexpiry --noexpiry  dnsadmin 1>&$logfile 2>&1
 samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
 
+mkdir -p /etc/mne/dns >&$logfile 2>&1
 samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab 1>&$logfile 2>&1
 chown root:dhcpd /etc/mne/dns/dns.keytab
 chmod 440 /etc/mne/dns/dns.keytab

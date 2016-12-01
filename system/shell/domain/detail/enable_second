@@ -1,26 +1,36 @@
 #!/bin/bash
 
-i=`dpkg --get-selections mnesamba | expand | fgrep ' install' | wc -l`
+i=`dpkg --get-selections mnesamba 2>&$logfile | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     apt-get update >&$logfile 2>&1
     apt-get -y install mnesamba >&$logfile 2>&1
 fi
 
+find_template globalextra  domain/enable globalextra_primary.conf
 
-systemctl daemon-reload
-systemctl stop smb.service
-systemctl stop nmb.service
+systemctl daemon-reload >&$logfile 2>&1
+systemctl stop smb.service >&$logfile 2>&1
+systemctl stop nmb.service >&$logfile 2>&1
 
-systemctl disable smb.service
-systemctl disable nmb.service
+systemctl disable smb.service >&$logfile 2>&1
+systemctl disable nmb.service >&$logfile 2>&1
 
-systemctl enable samba.service
-systemctl daemon-reload
+systemctl enable samba.service >&$logfile 2>&1
+systemctl daemon-reload >&$logfile 2>&1
 
 save_file $sambaconf/smb.conf
 save_file $dhcpconfig
 save_file /etc/hosts
 save_file $kerberosconfig
+
+# -------------------------------------------
+# permission certifikat files
+# -------------------------------------------
+chown root:root $certkeydir/$(hostname).key
+
+chmod 600 $certkeydir/$(hostname).key
+chmod 644 $certcertdir/$(hostname).crt
+chmod 644 $certcadir/ca.crt
 
 # -------------------------------------------
 # check PDC address is in /etc/hosts
@@ -46,9 +56,8 @@ admin=$vaadminInput
 if [ "$admin" = "" ];then
   admin=administrator
 fi
-echo "$vaadminpasswordInput" | kinit  $admin@$udomain
-echo klist
-klist
+echo "$vaadminpasswordInput" | kinit  $admin@$udomain 1>&$logfile 2>&1
+klist 1>&$logfile 2>&1
 
 # -------------------------------------------
 # domain provision
@@ -58,12 +67,41 @@ samba-tool domain join $domain DC \
     --option="interfaces=lo,$netdevice" \
     --option="bind interfaces only=yes" \
     --realm="$domain" -U"$admin" \
-    --password="$vaadminpasswordInput"
+    --dns-backend=BIND9_DLZ \
+    --password="$vaadminpasswordInput" >&$logfile 2>&1
 
 mod_smbconf
 mod_netpar
-cp $globalextra $sambaconf/globalextra.conf
-systemctl start samba.service
+mod_bind
+mod_appamor_bind
+
+prog='/####CERTCERTDIR####/     { gsub(/####CERTCERTDIR####/,certcertdir); }
+      /####CERTKEYDIR####/      { gsub(/####CERTKEYDIR####/,certkeydir); }
+      /####CERTCADIR####/       { gsub(/####CERTCADIR####/,certcadir); }
+      /####HOST####/            { gsub(/####HOST####/,host); }
+                             { print $0 }'
+
+awk "$prog" "host=$(hostname)" "certcertdir=$certcertdir" "certkeydir=$certkeydir" "certcadir=$certcadir" < $globalextra > $sambaconf/globalextra.conf
+
+mkdir -p /etc/mne/dns >&$logfile 2>&1
+chmod 755 /etc/mne/dns
+
+mne_error_ignore=1
+samba-tool user create www-data --rfc2307-from-nss --random-password --description="Unprivileged user for Webservices"
+samba-tool user setexpiry --noexpiry www-data
+
+samba-tool user create dnsadmin --random-password --description="Unprivileged user for DNS Admin" 1>&$logfile 2>&1
+mne_error_ignore=0
+
+samba-tool user setexpiry --noexpiry  dnsadmin 1>&$logfile 2>&1
+samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
+
+samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab >&$logfile 2>&1
+chown root:dhcpd /etc/mne/dns/dns.keytab
+chmod 440 /etc/mne/dns/dns.keytab
+
+systemctl restart samba.service
+systemctl restart bind9.service
 
 # -------------------------------------------
 # check name-server in dhclient.conf
@@ -76,3 +114,6 @@ mod_dhclient $addr $domain
 echo "nameserver $addr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain" >> /etc/resolv.conf
+
+echo 'please reboot before continue'
+

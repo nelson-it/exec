@@ -42,6 +42,8 @@ sambasbin=$sambaroot/sbin
 sambaconf=/etc/mne/samba
 sambavar=/var/lib/mne/samba
 
+ldapconf=/etc/ldap
+
 kerberosconfig=/etc/krb5.conf
 
 dovecotconf=/etc/dovecot

@@ -11,7 +11,7 @@ vaadminpasswordInputignore=1
 find_script domain/dns read.sh
 
 read_domain
-if [ "$typ" = "primary" ]; then
+if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
 
   acttime=$(date +%s)
   check_passwd
