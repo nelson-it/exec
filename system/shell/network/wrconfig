@@ -47,4 +47,4 @@ do
   ifconfig $device up
 done
 
-exit 0
+resolvconf -u

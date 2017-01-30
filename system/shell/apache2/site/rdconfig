@@ -26,10 +26,10 @@ do
         enabled=true
     fi
 
-          domain=`awk '/^[ \t]*#/ { next } tolower($1) ~ /servername/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
-         aliases=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveralias/ { gsub($1,""); sub(/^ */,""); print $0; exit; }' $apache2rootdir/sites-available/$site`
-           email=`awk '/^[ \t]*#/ { next } tolower($1) ~ /serveradmin/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
-    documentroot=`awk '/^[ \t]*#/ { next } tolower($1) ~ /documentroot/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
+          domain=`awk '/^[ \t]*# / { next } tolower($1) ~ /servername/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
+         aliases=`awk '/^[ \t]*# / { next } tolower($1) ~ /serveralias/ { gsub($1,""); sub(/^ */,""); print $0; exit; }' $apache2rootdir/sites-available/$site`
+           email=`awk '/^[ \t]*# / { next } tolower($1) ~ /serveradmin/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
+    documentroot=`awk '/^[ \t]*# / { next } tolower($1) ~ /documentroot/ { print $2; exit; }' $apache2rootdir/sites-available/$site`
     
     if [ "$domain" = "" ]; then
         domain=`hostname`
@@ -51,7 +51,7 @@ do
     conf=`cat $apache2rootdir/sites-available/$site | sed -e "s/$bs/$bs$bs/g"\
                                                           -e "s/'/$bs'/g" -e "s/\n/$bs""n/g" \
                                                           -e "s/\(^[^#]*[Ss]erver[Aa]dmin\).*/\1 ####EMAIL####/" \
-                                                          -e "s/\(^[^#]*[Ss]erver[Aa]lias\).*/\1 ####ALIAS####/" \
+                                                          -e "s/\(^.*[Ss]erver[Aa]lias\).*/\1 ####ALIAS####/" \
                                                           -e "s/\(^[^#]*[Ss]erver[Nn]ame\).*/\1 ####DOMAIN####/" \
                                                           -e "s/\(^[^#]*[Ee]rror[Ll]og.*\)$name\.log/\1####NAME####.log/" \
                                                           -e "s/\(^[^#]*[Cu]stom[Ll]og.*\)$name\.log/\1####NAME####.log/" \
@@ -59,6 +59,8 @@ do
                                                           -e "s/\(^[^#]*Directory\).*$dr.*/\1 ####DOCUMENTROOT####>/" \
                                                           -e "s/\(^[^#]*[Dd]ocument[Rr]oot\).*$datalocation.*/\1 ####DATAROOT########DOCUMENTROOT####/" \
                                                           -e "s/\(^[^#]*[Dd]ocument[Rr]oot\).*$dr.*/\1 ####DOCUMENTROOT####/" \
+                                                          -e "s/\(^[^#]*SSLCertificatefile\).*$dataroot\(.*\)/\1  ####DATAROOT####\2/" \
+                                                          -e "s/\(^[^#]*SSLCertificateKeyfile\).*$dataroot\(.*\)/\1  ####DATAROOT####\2/" \
                                                           -e "s/\(^[^#]*SSLCertificateFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/cert\/####DOMAIN####.crt/" \
                                                           -e "s/\(^[^#]*SSLCertificateKeyFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/key\/####DOMAIN####.key/" \
                                                           -e "s/\(.*VirtualHost.*\*:\)$port.*>/\1####HTTPPORT####>/" \
