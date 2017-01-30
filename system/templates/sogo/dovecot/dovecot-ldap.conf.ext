@@ -1,5 +1,5 @@
 uris = ldaps://localhost
-dn = cn=####USER####,cn=users,####DOMAINDN####
+dn = cn=####BINDUSER####,cn=users,####DOMAINDN####
 dnpass = ####BINDPASSWORD####
 auth_bind = yes
 auth_bind_userdn = cn=%u,cn=users,####DOMAINDN####

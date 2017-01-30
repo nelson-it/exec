@@ -159,6 +159,8 @@ function mod_netpar()
         echo "" > $sambaconf/dnsforward.conf;
     fi
     
+   . exec/system/shell/network/wrconfig
+    
     
 }
 

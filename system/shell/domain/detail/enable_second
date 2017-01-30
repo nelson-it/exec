@@ -26,11 +26,18 @@ save_file $kerberosconfig
 # -------------------------------------------
 # permission certifikat files
 # -------------------------------------------
-chown root:root $certkeydir/$(hostname).key
+if [ -f $certkeydir/$(hostname).key ]; then
+    chown root:root $certkeydir/$(hostname).key
+    chmod 600 $certkeydir/$(hostname).key
+fi
 
-chmod 600 $certkeydir/$(hostname).key
-chmod 644 $certcertdir/$(hostname).crt
-chmod 644 $certcadir/ca.crt
+if [ -f $certkeydir/$(hostname).crt ]; then
+    chmod 644 $certcertdir/$(hostname).crt
+fi
+
+if [ -f $certcadir/ca.crt ]; then
+  chmod 644 $certcadir/ca.crt
+fi
 
 # -------------------------------------------
 # check PDC address is in /etc/hosts

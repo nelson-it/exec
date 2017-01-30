@@ -34,8 +34,8 @@ get_data "$getreleases" | \
     groupnameread="$groupname Read"
     $sambabin/samba-tool group list | egrep "^$groupname\$" >&$logfile 2>&1
     if [ ! "$?" = "0" ]; then
-      $sambabin/samba-tool group add "$groupname" >&logfile 2>&1
-      $sambabin/samba-tool group add "$groupnameread" >&logfile 2>&1
+      $sambabin/samba-tool group add "$groupname" >&$logfile 2>&1
+      $sambabin/samba-tool group add "$groupnameread" >&$logfile 2>&1
 
       wwwid=$($sambabin/wbinfo --name-to-sid="www-data" | cut -f1 "-d ")
       wrsid=$($sambabin/wbinfo --name-to-sid="$groupname" | cut -f1 "-d ")

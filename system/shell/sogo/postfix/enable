@@ -11,22 +11,23 @@ do
   chmod g+s          $postfixconf/$dir >&$logfile 2>&1
 done
 
-prog='/####CERTCERTDIR####/     { gsub(/####CERTCERTDIR####/,certcertdir); }
-      /####CERTKEYDIR####/      { gsub(/####CERTKEYDIR####/,certkeydir); }
-      /####HOST####/            { gsub(/####HOST####/,host); }
-      /####DOMAIN####/          { gsub(/####DOMAIN####/,domain); }
-      /####DOMAINDN####/        { gsub(/####DOMAINDN####/,domaindn); }
-      /####BINDPASSWORD####/    { gsub(/####BINDPASSWORD####/, bindpassword);  }      
-      /####MAILRELAY####/       { gsub(/####MAILRELAY####/,mailrelay); }
-      /####MAILRELAYUSER####/   { gsub(/####MAILRELAYUSER####/,mailrelayuser); }
-      /####MAILRELAYPASSWD####/ { gsub(/####MAILRELAYPASSWD####/,mailrelaypasswd); }
+prog='/####CERTCERTDIR####/     { gsub(/####CERTCERTDIR####/,"'$certcertdir'"); }
+      /####CERTKEYDIR####/      { gsub(/####CERTKEYDIR####/,"'$certkeydir'"); }
+      /####HOST####/            { gsub(/####HOST####/,"'$(hostname)'"); }
+      /####DOMAIN####/          { gsub(/####DOMAIN####/,"'$domain'"); }
+      /####DOMAINDN####/        { gsub(/####DOMAINDN####/,"'$domaindn'"); }
+      /####BINDUSER####/        { gsub(/####BINDUSER####/,"'$sogouser'");  }      
+      /####BINDPASSWORD####/    { gsub(/####BINDPASSWORD####/,"'$bindpassword'");  }      
+      /####MAILRELAY####/       { gsub(/####MAILRELAY####/,"'$vamailrelayInput'"); }
+      /####MAILRELAYUSER####/   { gsub(/####MAILRELAYUSER####/,"'$vamailrelayuserInput'"); }
+      /####MAILRELAYPASSWD####/ { gsub(/####MAILRELAYPASSWD####/,"'$vamailrelaypasswordInput'"); }
                              { print $0 }'
 
 for file in main.cf master.cf smtp_header_checks pgsql/aliases pgsql/canonical sasl/passwd ldap/mailbox_maps ldap/uid_maps
 do
   find_template conffile sogo/postfix $file
   save_file $postfixconf/$file
-  awk "$prog" "bindpassword=$bindpassword" "domain=$domain" "domaindn=$domaindn" "host=$(hostname)" "certcertdir=$certcertdir" "certkeydir=$certkeydir" "mailrelay=$vamailrelayInput" "mailrelayuser=$vamailrelayuserInput"  "mailrelaypasswd=$vamailrelaypasswordInput" < $conffile > $postfixconf/$file
+  awk "$prog" < $conffile > $postfixconf/$file
   chgrp postfix $postfixconf/$file
   chmod 640 $postfixconf/$file
 done

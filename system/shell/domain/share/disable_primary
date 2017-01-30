@@ -30,8 +30,8 @@ $sambabin/samba-tool group list | fgrep "Mneshare" | sed -e 's/^Mneshare //' -e 
   do
     egrep -i "^\\[$name\\][ \t]*$" $sambaconf/shares.conf >&$logfile 2>&1 
     if [ ! "$?" = "0" ]; then
-      $sambabin/samba-tool group delete "Mneshare $name"      >&logfile 2>&1
-      $sambabin/samba-tool group delete "Mneshare $name Read" >&logfile 2>&1
+      $sambabin/samba-tool group delete "Mneshare $name"      >&$logfile 2>&1
+      $sambabin/samba-tool group delete "Mneshare $name Read" >&$logfile 2>&1
     fi
   done
 
