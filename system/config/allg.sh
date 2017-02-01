@@ -192,7 +192,9 @@ if [ "$ALLGREADED" = "" ]; then
         fi
     fi
     
-      . exec/system/config/config.sh
+      mne_error_ignore=1
+      . exec/system/config/config.sh >/dev/null 2>&1
+      mne_error_ignore=
     
     if [ -f "exec/local/system/config/config.sh" ]; then
       . exec/local/system/config/config.sh

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-psql=/Library/PostgreSQL/9.3/bin/psql
+psql=/Library/PostgreSQL/9.5/bin/psql
 
 apache2sitedir=/opt/local/apache2/conf/other
 apache2ensite=
