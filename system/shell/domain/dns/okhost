@@ -17,21 +17,17 @@ if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
   check_passwd
 
   prog='/^    A:/  { print $2;}'
-  oldaddr=$(samba-tool dns query $(hostname) $domain $vapar1 $vapar3 -k yes 2>&$logfile | awk "$prog")
+  if [ "$vapar0" != "################" ] && [ "$vapar0" != "" ]; then
+    oldaddr=$(samba-tool dns query $(hostname) $domain $vapar1 $vapar3 -k yes 2>&$logfile | awk "$prog")
+  else
+    oldaddr=
+  fi
+  
+  if [ "$oldaddr" != "" ];then
+      samba-tool dns delete $(hostname) $domain $vapar1 A $oldaddr -k yes >&$logfile 2>&1
+  fi
 
-  if [ "$oldaddr" = "" ];then
-    if [ "$vapar0" != "" ]; then
-      prog='/^  Name=/ { split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next }
-             /^    A:/ { if ( $2 == "'$vapar2'" ) { print name; exit } }'
-      oldname=$(samba-tool dns query $(hostname) "$domain" '@' "A" | awk "$prog" ) 
-      if [ "$oldname" != '' ]; then
-        samba-tool dns delete $(hostname) $domain $oldname A $vapar2 -k yes
-      fi
-    fi
-    samba-tool dns add $(hostname) $domain $vapar1 $vapar3 "$vapar2" -k yes
-  elif [ "$oldaddr" != "$vapar2" ]; then
-    samba-tool dns update $(hostname) $domain $vapar1 $vapar3 $oldaddr $vapar2 -k yes
-  fi  
+  samba-tool dns add $(hostname) $domain $vapar1 $vapar3 "$vapar2" -k yes >&$logfile 2>&1
 
   . $scriptdir/../dhcp/mkfix
 
