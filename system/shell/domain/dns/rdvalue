@@ -13,85 +13,22 @@ read_domain
 
 if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
 
-  read_addresses
-  
   acttime=$(date +%s)
   check_passwd
 
-  progfind='/^  Name=/ { split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
-            /^    A:/  { if ( name != "" ) printf("%s ", name);}'
-  progaddr='/^    A:/  { print $2 }'
+  prog='/^  Name=/     { name=""; split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
+        /^    A:/      { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''A'\'' );\n", name,  $2) }
+        /^    AAAA:/   { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''AAAA'\'' );\n", name,  $2) }
+        /^    CNAME:/  { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''CNAME'\'' );\n", name,  substr($2,1,length($2)-1)) }
+        /^    MX:/     { printf("SELECT mne_system.dnsaddress_ok ( '\'$domain\'',  '\''%s %s'\'', '\''MX'\'' );\n", substr($2,1,length($2) - 1),  num=substr($3,2,length($3) - 2)) }'
 
-  for name in `samba-tool dns query $(hostname) $domain '@' A -k yes | awk "$progfind"`
-  do
-    address=$(samba-tool dns query $(hostname) $domain "$name" A -k yes | awk "$progaddr")
-    find_address $name A $address
-    if [ "$addrindex" = "$addranzahl" ]; then
-      dnsaddressid='################'
-      macaddr=
-      
-    else
-      dnsaddressid=${dnsid[$addrindex]}
-      macaddr=${mac[$addrindex]}
-    fi
-      
-    read_mac
-    insert="$insert""SELECT mne_system.dnsaddress_ok ( '$dnsaddressid', '$name', '$address', 'A', 2, '$macaddr' );"
-  done
 
-  progfind='/^  Name=/    { split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
-            /^    AAAA:/  { if ( name != "" ) printf("%s ", name);}'
-  progaddr='/^    AAAA:/  { print $2 }'
+  insert=$(samba-tool dns query $(hostname) $domain '@' ALL -k yes | awk "$prog")
 
-  for name in `samba-tool dns query $(hostname) $domain '@' AAAA -k yes | awk "$progfind"`
-  do
-    address=$(samba-tool dns query $(hostname) $domain "$name" AAAA -k yes | awk "$progaddr")
-    find_address $name AAAA $address
-    if [ "$addrindex" = "$addranzahl" ]; then
-      dnsaddressid='################'
-      macaddr=
-      
-    else
-      dnsaddressid=${dnsid[$addrindex]}
-      macaddr=${mac[$addrindex]}
-    fi
-      
-    read_mac
-    insert="$insert""SELECT mne_system.dnsaddress_ok ( '$dnsaddressid', '$name', '$address', 'AAAA', 2, '$macaddr' );"
-  done
+  prog='{ if ( substr($4,1,1) != "<" ) printf("SELECT mne_system.macaddress_ok('\''%s'\'', '\''%s'\'')\n;",  substr($2,2,length($2) - 2 ), $4 ) } '
+  insert="$insert"$(arp -an $name 2> /dev/null  | awk "$prog")
 
-  progfind='/^  Name=/     { split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
-            /^    CNAME:/  { if ( name != "" ) printf("%s ", name);}'
-  progaddr='/^    CNAME:/  { print substr($2,1,length($2)-1) }'
-
-  for name in `samba-tool dns query $(hostname) $domain '@' CNAME -k yes | awk "$progfind"`
-  do
-    address=$(samba-tool dns query $(hostname) $domain "$name" CNAME -k yes | awk "$progaddr")
-    find_address $name CNAME $address
-    if [ "$addrindex" = "$addranzahl" ]; then
-      dnsaddressid='################'
-    else
-      dnsaddressid=${dnsid[$addrindex]}
-    fi
-      
-    insert="$insert""SELECT mne_system.dnsaddress_ok ( '$dnsaddressid', '$name', '$address', 'CNAME', 0, '' );"
-  done
-
-  progfind='/^    MX:/  { name=substr($2,1,length($2) - 1); num=substr($3,2,length($3) - 2); printf("%s####%s", name, num ); }'
-  for address in `samba-tool dns query $(hostname) $domain '@' MX -k yes | awk "$progfind"`
-  do
-    address=$(echo "$address" | sed -e 's/####/ /')
-    find_address "$domain" MX "$address"
-    if [ "$addrindex" = "$addranzahl" ]; then
-      dnsaddressid='################'
-    else
-      dnsaddressid=${dnsid[$addrindex]}
-    fi
-    insert="$insert""SELECT mne_system.dnsaddress_ok ( '$dnsaddressid', '$domain', '$address', 'MX', 2, '' );"
-    
-  done
-    
-   result=$(get_data "$insert");
-   result=$(get_data "$cleardnsaddress" $acttime)
+  result=$(get_data "$insert");
+  result=$(get_data "$cleardnsaddress" $acttime)
 
 fi
