@@ -1,6 +1,6 @@
 #!/bin/bash
 
-url="http://`hostname`:1024"
+url="http://`hostname`:8024"
 mailtempl="exec/allg/shell/repository/repmail"
 frommail="erpteam@localhost"
 signature="Ihr Erp Team"
@@ -13,7 +13,7 @@ uname=`uname`
 if [ ! "$uname" = "Darwin" ]; then
     uname=`uname -o`
 else
-    export DYLD_LIBRARY_PATH=/Library/PostgreSQL/8.4/lib
+    export DYLD_LIBRARY_PATH=/Library/PostgreSQL/9.5/lib
     md5sum=md5
 fi
 
