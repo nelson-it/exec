@@ -190,6 +190,11 @@ if [ "$ALLGREADED" = "" ]; then
         if [ "$?" = "0" ]; then
           SYSVERSION=mac_10_11
         fi
+
+        sw_vers -productVersion | fgrep 10.13 1>&$logfile
+        if [ "$?" = "0" ]; then
+          SYSVERSION=mac_10_13
+        fi
     fi
     
       mne_error_ignore=1
