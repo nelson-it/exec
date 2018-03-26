@@ -64,7 +64,6 @@ samba-tool domain provision \
     --option="interfaces=lo,$netdevice" \
      --option="bind interfaces only=yes" \
      --use-rfc2307 \
-     --use-xattrs=yes \
      --realm="$domain" \
      --domain="$workgroup" \
      --server-role=dc \
@@ -135,7 +134,7 @@ klist >&$logfile 2>&1
 # -------------------------------------------
 # Grant share Rights to Domainadmins
 # -------------------------------------------
-#$sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -k
+#$sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -k -I $addr
 
 echo 'please reboot before continue'
 
