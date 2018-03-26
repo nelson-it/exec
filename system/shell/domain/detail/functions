@@ -59,10 +59,10 @@ function add_users()
 
 function mod_bind()
 {
-  fgrep "/var/lib/mne/samba/private/named.conf" $bindconf/named.conf 1>&$logfile 2>&1
+  fgrep "/opt/mne/samba/bind-dns/named.conf" $bindconf/named.conf 1>&$logfile 2>&1
   if [ "$?" != "0" ];then
     save_file $bindconf/named.conf
-    echo "include \"/var/lib/mne/samba/private/named.conf\";" >> $bindconf/named.conf
+    echo "include \"/opt/mne/samba/bind-dns/named.conf\";" >> $bindconf/named.conf
   fi
   
   fgrep "dns.keytab" $bindconf/named.conf.options 1>&$logfile 2>&1
@@ -74,7 +74,7 @@ function mod_bind()
   
   chmod 640 /var/lib/mne/samba/private/dns.keytab
   chown root:bind /var/lib/mne/samba/private/dns.keytab
-  chown root:bind /var/lib/mne/samba/private/named.conf
+  chown root:bind /etc/bind/rndc.key
   
   
 }
@@ -108,6 +108,7 @@ function mod_appamor_bind()
     fi
 
     echo "/opt/mne/samba/lib/** rm,"                >  $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/opt/mne/samba/bind-dns/** rwm,"          >> $apparmorconf/local/usr.sbin.named.mnesamba
     echo "/etc/mne/samba/** r,"                     >> $apparmorconf/local/usr.sbin.named.mnesamba
     echo "/var/lib/mne/samba/private/dns.keytab r," >> $apparmorconf/local/usr.sbin.named.mnesamba
     echo "/var/lib/mne/samba/private/named.conf r," >> $apparmorconf/local/usr.sbin.named.mnesamba
@@ -202,7 +203,7 @@ function rm_config()
     fi
 
     if [ -f $bindconf/named.conf ]; then
-        sed -e "/\/var\/lib\/mne\/samba/d" < $bindconf/named.conf > /tmp/named.$$
+        sed -e "/\/opt\/mne\/\/samba/d" < $bindconf/named.conf > /tmp/named.$$
         mv /tmp/named.$$ $bindconf/named.conf
     fi
 
