@@ -4,4 +4,4 @@ mne_error_ignore=1
 $sambabin/samba-tool user delete $olduser >&$logfile 2>&1
 mne_error_ignore=
 
-. $scriptdir/add_primary
+. $(dirname $0)/add_primary

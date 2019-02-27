@@ -15,7 +15,7 @@ get_repperson()
 
 user=
 repositoryid=
-haveid=
+haveid=0
 outfile=/tmp/$$.zip
 
 while [ $# -gt 0 ] ; do
@@ -32,13 +32,13 @@ done
 
 db=`echo $db | sed -e "s/@.*$//"`
 
-if [ $haveid = 0 ] && [ "$user" = "" ]; then
+if [ "$haveid" = "0" ] && [ "$user" = "" ]; then
     echo "Benutzer nicht angegeben";
     sleep 0;
     exit 1;
 fi
 
-if [ $haveid = 0 ] && [ "$repositoryid" = "" ]; then
+if [ "$haveid" = "0" ] && [ "$repositoryid" = "" ]; then
     echo "Aktenschrank nicht angegeben";
     sleep 0;
     exit 2;

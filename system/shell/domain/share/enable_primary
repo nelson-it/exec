@@ -25,7 +25,7 @@ dirs=`( get_data "$getreleases" | \
 echo "$dirs" > $sambaconf/shares.conf
 . ./exec/system/shell/domain/restart/$typ
 
-get_data "$getreleases" | \
+get_data "$getrelease" $vasharesidInput_old | \
   while read line; 
   do
     get_releases "$line"
@@ -50,8 +50,14 @@ get_data "$getreleases" | \
     fi
     chmod g+s "$DATAROOT/$location"
      
-    $sambabin/samba-tool group removemembers "$groupname"     $(user=$($sambabin/samba-tool group listmembers "$groupname");     echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
-    $sambabin/samba-tool group removemembers "$groupnameread" $(user=$($sambabin/samba-tool group listmembers "$groupnameread"); echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
+    members=$($sambabin/samba-tool group listmembers "$groupname")
+    if [ ! "$members" = "" ]; then
+      $sambabin/samba-tool group removemembers "$groupname"     $(user=$members; echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
+    fi
+    members=$($sambabin/samba-tool group listmembers "$groupnameread")
+    if [ ! "$members" = "" ]; then
+      $sambabin/samba-tool group removemembers "$groupname"     $(user=$members; echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
+    fi
 
     get_data "$getvalidusers" "$name" | \
       while read lline;

@@ -9,7 +9,7 @@ if [ "$typ" = "" ]; then
     exit 0
 fi
 
-. $scriptdir/validuser
-. $scriptdir/../restart/$typ
+. $(dirname $0)/validuser
+. $(dirname $0)/../restart/$typ
 
 exit 0
