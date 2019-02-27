@@ -9,19 +9,20 @@ fi
 chmod 600 $certkeydir/$domain.key
 
 if [ "$aliases" != "" ]; then
-    echo "subjectAltName=DNS:$domain $aliases" | sed -e "s/[ 	][ 	]*/,/g" -e "s/,/,DNS:/g" > $scriptdir/multi.cnf
+    echo "subjectAltName=DNS:$domain $aliases" | sed -e "s/[ 	][ 	]*/,/g" -e "s/,/,DNS:/g" > $(dirname $0)/multi.cnf
 else
-   echo "subjectAltName=DNS:$domain" > $scriptdir/multi.cnf
+   echo "subjectAltName=DNS:$domain" > $(dirname $0)/multi.cnf
 fi
 
 rm -f $certcsrdir/$domain.csr  2>&1 >/dev/null
 rm -f $certcertdir/$domain.crt 2>&1 >/dev/null
 
-cat $certscriptdir/openssl.conf $scriptdir/multi.cnf > $scriptdir/sslconf.cnf
+cat $certscriptdir/openssl.conf $(dirname $0)/multi.cnf > $(dirname $0)/sslconf.cnf
 
-openssl req -new -sha256 -key $certkeydir/$domain.key -out $certcsrdir/$domain.csr -config $scriptdir/sslconf.cnf -subj "/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"  >&$logfile 2>&1
+cat $(dirname $0)/sslconf.cnf 2>&1 >&$logfile
+openssl req -new -sha256 -key $certkeydir/$domain.key -out $certcsrdir/$domain.csr -config $(dirname $0)/sslconf.cnf -subj "/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"  >&$logfile 2>&1
 
-echo $vapasswdInput | openssl x509 -req -days 365 -extfile $scriptdir/multi.cnf \
+echo $vapasswdInput | openssl x509 -req -days 365 -extfile $(dirname $0)/multi.cnf \
 		     -in $certcsrdir/$domain.csr -CA $certcadir/ca.crt -CAkey $certcadir/ca.key -CAcreateserial -CAserial $certcadir/serial.seq -out $certcertdir/$domain.crt -passin stdin  >&$logfile 2>&1
 
 if [ "$?" != "0" ]; then
@@ -32,5 +33,5 @@ else
     chmod 644 $certcertdir/$domain.crt
 fi   
 
-rm -f $scriptdir/multi.cnf
-rm -f $scriptdir/sslconf.cnf
+rm -f $(dirname $0)/multi.cnf
+rm -f $(dirname $0)/sslconf.cnf

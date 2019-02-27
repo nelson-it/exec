@@ -3,8 +3,6 @@
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-myscriptdir=$scriptdir
-
 i=`dpkg --get-selections mnesogo 2>&$logfile | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     debconf-set-selections <<< "postfix postfix/mailname string $(hostname)"
@@ -51,10 +49,10 @@ su - postgres -c "echo 'CREATE SCHEMA ext_sogo AUTHORIZATION $sogouser;'   | psq
 # ==================================================================
 $sambabin/samba-tool user list | egrep "^$sogouser\$" >/dev/null
 if [ "$?" != "0" ]; then
-  . $myscriptdir/../domain/user/add_primary >&$logfile 2>&1
+  . $(dirname $0)/../domain/user/add_primary >&$logfile 2>&1
 fi 
 
-. $myscriptdir/../domain/user/setpasswd_primary >&$logfile 2>&1
+. $(dirname $0)/../domain/user/setpasswd_primary >&$logfile 2>&1
 
 # ==================================================================
 # Conf File
@@ -125,8 +123,8 @@ if [  ! -e $certkeydir/sogo.key ] ||  [ ! -e $certcertdir/sogo.crt ]; then
 fi
 domain="$domainsave"
 
-. $myscriptdir/dovecot/enable
-. $myscriptdir/postfix/enable
+. $(dirname $0)/dovecot/enable
+. $(dirname $0)/postfix/enable
 
 a2ensite sogo >&$logfile 2>&1
 $apache2reload >&$logfile 2>&1

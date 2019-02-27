@@ -6,7 +6,7 @@ vaadminpasswordInputignore=1
 
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
-. $scriptdir/functions
+. $(dirname $0)/functions
 
 find_script domain/dns read.sh
 
