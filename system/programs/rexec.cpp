@@ -14,6 +14,7 @@ int main(int argc, char **argv)
     int largc;
     char **largv;
     struct passwd *pwd;
+    struct group *group;
     char *va[1024];
     int i;
 
@@ -28,6 +29,7 @@ int main(int argc, char **argv)
     a.scan(--largc, ++largv);
 
     pwd = getpwuid(getuid());
+    group = getgrgid(getegid());
 
     setuid( 0 );
     setgroups(0, NULL);
@@ -48,14 +50,16 @@ int main(int argc, char **argv)
     va[4] = (char*)((std::string)a["project"]).c_str();
     va[5] = (char*)"-user";
     va[6] = pwd->pw_name;
+    va[7] = (char*)"-group";
+    va[8] = group->gr_name;
 
     for ( i = 1 ; i != 1000 && largv[i] != NULL && largv[i+1] != NULL; i++, i++ )
     {
-        va[i+6] = new char[strlen(largv[i]) + 4];
-        strcpy((char *)va[i+6], ( std::string("-va") + largv[i]).c_str());
-        va[i+7] = largv[i+1];
+        va[i+8] = new char[strlen(largv[i]) + 4];
+        strcpy((char *)va[i+8], ( std::string("-va") + largv[i]).c_str());
+        va[i+9] = largv[i+1];
     }
-    va[i + 6] = NULL;
+    va[i + 8] = NULL;
 
     execv( (std::string("exec/system/shell/") + *largv).c_str(), va);
     fprintf(stderr, "command not found <%s>\n", (((std::string)a["projectroot"]) + "/exec/system/shell/" + *largv).c_str());

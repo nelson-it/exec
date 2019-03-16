@@ -8,33 +8,15 @@ exit_status=0
 find_script domain/detail read.sh
 find_script user/data read.sh
 
-user=$vapar2
 olduser=$valoginnameInput_old
+valoginnameInput=$vapar2
 password=$(dd if=/dev/urandom bs=2048 count=1 2>/dev/null |tr -dc "a-zA-Z0-9"|fold -w 64 |head -1)
 
-if [ ! "$user" = "" ]; then
-    . exec/system/shell/domain/user/update
-    userdata=`get_data "$getuserdata" "$user"`
+if [ ! "$valoginnameInput" = "" ]; then
+    userdata=`get_data "$getuserdata" "$valoginnameInput"`
     get_userdata "$userdata"
 fi
 
-if [ ! "$user" = "$olduser" ]; then
-
-    if [ "$user" = "" ]; then
-         . exec/system/shell/domain/user/del 
-    elif [ "$olduser" = "" ]; then
-         . exec/system/shell/domain/user/add 
-    else
-         . exec/system/shell/domain/user/move 
-    fi
-else
-    domainconf=`get_data "$getdomain"`
-    get_domain "$domainconf"
-    
-    if [ ! "$typ" = "" ]; then
-        . exec/system/shell/domain/user/validuser
-        . exec/system/shell/domain/restart/$typ
-    fi
-fi
+. exec/system/shell/domain/user/move 
 
 exit $exitstatus

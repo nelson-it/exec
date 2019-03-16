@@ -13,5 +13,5 @@ if [  "$typ" = "" ]; then
 fi
 
 . exec/system/shell/domain/user/add_$typ
-. exec/system/shell/domain/user/validuser
+. exec/system/shell/domain/user/wrvaliduser
 . exec/system/shell/domain/restart/$typ

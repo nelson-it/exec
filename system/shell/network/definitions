@@ -1,0 +1,12 @@
+
+case ${DISTRIB_RELEASE,,} in
+  12.04|14.04|16.04)
+    netinterfaces=/etc/network/interfaces
+  ;;
+  *)
+    cloudcfgdir=/etc/cloud/cloud.cfg.d
+    netplandir=/etc/netplan
+  ;;
+esac
+
+

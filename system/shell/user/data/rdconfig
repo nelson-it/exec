@@ -7,5 +7,5 @@ exit_status=0
 
 user=$valoginnameInput
 if [ ! "$user" = "" ]; then
-    . exec/system/shell/domain/user/update
+    . exec/system/shell/domain/user/rdconfig
 fi

@@ -2,11 +2,9 @@
 
 exit_status=0
 
-vaadminpasswordInputignore=1
-
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
-. $(dirname $0)/functions
+. $(dirname $BASH_SOURCE)/functions
 
 find_script domain/dns read.sh
 
@@ -16,7 +14,11 @@ if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
   acttime=$(date +%s)
   check_passwd
 
-  prog='/^    A:/  { print $2;}'
+  prog='/^ *A:/     { print $2;}\
+        /^ *AAAA:/  { print $2;}\
+        /^ *CNAME:/ { print substr($2,1,length($2)-1);}\
+        /^ *MX:/    { print substr($2,1,length($2)-1) " " substr($3,2,length($3) - 2);}'
+
   if [ "$vapar0" != "################" ] && [ "$vapar0" != "" ]; then
     oldaddr=$(samba-tool dns query $(hostname) $domain $vapar1 $vapar3 -k yes 2>&$logfile | awk "$prog")
   else
@@ -24,12 +26,12 @@ if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
   fi
   
   if [ "$oldaddr" != "" ];then
-      samba-tool dns delete $(hostname) $domain $vapar1 A $oldaddr -k yes >&$logfile 2>&1
+      samba-tool dns delete $(hostname) $domain $vapar1 $vapar3 "$oldaddr" -k yes >&$logfile 2>&1
   fi
 
   samba-tool dns add $(hostname) $domain $vapar1 $vapar3 "$vapar2" -k yes >&$logfile 2>&1
 
-  . $(dirname $0)/../dhcp/mkfix
+  . $(dirname $BASH_SOURCE)/../dhcp/mkfix
 
 fi
 

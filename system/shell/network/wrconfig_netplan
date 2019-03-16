@@ -1,0 +1,47 @@
+#!/bin/bash
+
+find_template disable     network netplan_disable
+find_template conf_single network netplan_single
+
+if [ -d "$cloudcfgdir" ] && [ ! -f "$cloudcfgdir/99-mne-disable-network-config.cfg" ]; then
+  cp $disable $cloudcfgdir/99-mne-disable-network-config.cfg;
+fi
+
+if [ ! -f $netplandir/mnesys-config ]; then
+   mv $netplandir "$netplandir"_"$actdate"
+   mkdir $netplandir
+   touch $netplandir/mnesys-config
+   interfaces="$(ls /sys/class/net)"
+else
+   interfaces="$vanetworkidInput"
+fi
+
+for i in $interfaces
+do
+  if [ "$i" != "lo" ]; then
+    interface=$(get_data "$getsingleinterface" "$i")
+    get_interfaces "$interface"
+
+    if [ ! "$typ" = "" ]; then
+      prog='/####DEVICE####/     { gsub(/####DEVICE####/,"'$device'"); }
+
+            /dhcp4/              { if ( "'$typ'" != "dhcp"   ) next; }
+            /addresses/          { if ( "'$typ'" != "static" ) next; }
+
+            /####ADDR####/       { if ( "'$addr'"       == "" || "'$typ'" != "static" ) next; gsub(/####ADDR####/, "'$addr'"); }
+            /####MASK####/       { if ( "'$mask'"       == "" || "'$typ'" != "static" ) next; gsub(/####MASK####/, "'$mask'"); }
+            /####GW####/         { if ( "'$gw'"         == "" || "'$typ'" != "static" ) next; gsub(/####GW####/, "'$gw'"); }
+            /nameserver/         { if ( "'$nameserver'" == "" || "'$typ'" != "static" ) next; }
+            /####NAMESERVER####/ { if ( "'$nameserver'" == "" || "'$typ'" != "static" ) next; gsub(/####NAMESERVER####/, "'$nameserver'"); }
+            /####SEARCH####/     { if ( "'$search'"     == "" || "'$typ'" != "static" ) next; gsub(/####SEARCH####/, "'$search'"); }
+                                 { print $0 }'
+
+      conffile="$netplandir/00-mne-$device.yaml"
+      save_file $conffile
+      awk "$prog" "$conf_single" > $conffile
+    fi
+  fi
+done
+
+netplan apply
+ 

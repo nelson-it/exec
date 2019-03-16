@@ -7,15 +7,16 @@ if [ ! "$i" = "1" ]; then
 fi
 
 find_template globalextra  domain/enable globalextra_primary.conf
+find_template namedoption  domain/enable named.conf.options
 
 systemctl daemon-reload >&$logfile 2>&1
-systemctl stop smb.service >&$logfile 2>&1
-systemctl stop nmb.service >&$logfile 2>&1
+systemctl stop mne_smb.service >&$logfile 2>&1
+systemctl stop mne_nmb.service >&$logfile 2>&1
 
-systemctl disable smb.service >&$logfile 2>&1
-systemctl disable nmb.service >&$logfile 2>&1
+systemctl disable mne_smb.service >&$logfile 2>&1
+systemctl disable mne_nmb.service >&$logfile 2>&1
 
-systemctl enable samba.service >&$logfile 2>&1
+systemctl enable mne_samba.service >&$logfile 2>&1
 systemctl daemon-reload >&$logfile 2>&1
 
 save_file $sambaconf/smb.conf
@@ -51,7 +52,7 @@ add_host $addr $(hostname) $domain
 # -------------------------------------------
 echo "nameserver $primaryaddr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
-echo "search $domain" >> /etc/resolv.conf
+echo "search $domain $dnssearch" >> /etc/resolv.conf
 
 # -------------------------------------------
 # check kerberos
@@ -107,7 +108,7 @@ samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.ke
 chown root:dhcpd /etc/mne/dns/dns.keytab
 chmod 440 /etc/mne/dns/dns.keytab
 
-systemctl restart samba.service
+systemctl restart mne_samba.service
 systemctl restart bind9.service
 
 # -------------------------------------------

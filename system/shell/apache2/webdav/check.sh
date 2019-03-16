@@ -1,1 +1,1 @@
-sysok=( 12_04 14_04 mac_10_8 mac_10_11 )
+sysok=( ubuntu_16.04 ubuntu_18.04 )
