@@ -7,6 +7,6 @@ addr=$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 add_host $addr $(hostname) $domain
 
 mod_netpar
-systemctl restart samba.service
+systemctl restart mne_samba.service
 
 . $(dirname $0)/../dhcp/enable

@@ -13,7 +13,7 @@ if [ "$typ" = "" ]; then
 fi
 
 . exec/system/shell/domain/user/move_$typ
-. exec/system/shell/domain/user/validuser
+. exec/system/shell/domain/user/wrvaliduser
 . exec/system/shell/domain/restart/$typ
 
 exit 0

@@ -65,18 +65,15 @@ function mod_bind()
     echo "include \"/opt/mne/samba/bind-dns/named.conf\";" >> $bindconf/named.conf
   fi
   
-  fgrep "dns.keytab" $bindconf/named.conf.options 1>&$logfile 2>&1
-  if [ "$?" != "0" ];then
-    save_file $bindconf/named.conf.options
-    sed -e  '/options  *{/a\ \ \ \ \ \ \ \ tkey-gssapi-keytab "/var/lib/mne/samba/private/dns.keytab";' $bindconf/named.conf.options > /tmp/bindoption.$$
-    mv /tmp/bindoption.$$ $bindconf/named.conf.options
-  fi
+  touch $bindconf/named.conf.options.local
+  touch $bindconf/named.conf.options.forwarders
   
+  save_file $bindconf/named.conf.options
+  cp $namedoption $bindconf/named.conf.options
+
   chmod 640 /var/lib/mne/samba/private/dns.keytab
   chown root:bind /var/lib/mne/samba/private/dns.keytab
   chown root:bind /etc/bind/rndc.key
-  
-  
 }
 
 function mod_dhclient()
@@ -107,12 +104,12 @@ function mod_appamor_bind()
         mv /tmp/named.$$  $apparmorconf/usr.sbin.named
     fi
 
-    echo "/opt/mne/samba/lib/** rm,"                >  $apparmorconf/local/usr.sbin.named.mnesamba
-    echo "/opt/mne/samba/bind-dns/** rwm,"          >> $apparmorconf/local/usr.sbin.named.mnesamba
-    echo "/etc/mne/samba/** r,"                     >> $apparmorconf/local/usr.sbin.named.mnesamba
-    echo "/var/lib/mne/samba/private/dns.keytab r," >> $apparmorconf/local/usr.sbin.named.mnesamba
-    echo "/var/lib/mne/samba/private/named.conf r," >> $apparmorconf/local/usr.sbin.named.mnesamba
-    echo "/var/lib/mne/samba/private/dns/** rwk,"   >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/opt/mne/samba/lib/** krm,"                >  $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/opt/mne/samba/bind-dns/** krwm,"          >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/etc/mne/samba/** kr,"                     >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/dns.keytab kr," >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/named.conf kr," >> $apparmorconf/local/usr.sbin.named.mnesamba
+    echo "/var/lib/mne/samba/private/dns/** krwk,"   >> $apparmorconf/local/usr.sbin.named.mnesamba
     
     systemctl restart apparmor
 }
@@ -155,14 +152,16 @@ function mod_netpar()
     echo "TLS_REQCERT allow" >> $ldapconf/ldap.conf
     
     if [ "$dnsforwarder" != "" ]; then
-        echo "         dns forwarder = $dnsforwarder" > $sambaconf/dnsforward.conf;
+        echo $dnsforwarder | sed -e 's/$/;\n};/g ;'\
+                                 -e 's/,/ /g'\
+                                 -e 's/  */;\n    /g'\
+                                 -e 's/^/    /'\
+                                 -e '1 i forwarders {' > $bindconf/named.conf.options.forwarders;
     else
-        echo "" > $sambaconf/dnsforward.conf;
+        echo "" > $bindconf/named.conf.options.forwarders;
     fi
     
    . exec/system/shell/network/wrconfig
-    
-    
 }
 
 function mod_kerberos()

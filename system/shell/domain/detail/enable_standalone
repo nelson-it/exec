@@ -10,11 +10,11 @@ fi
 
 systemctl daemon-reload
 
-systemctl stop    samba.service
-systemctl disable samba.service
+systemctl stop    mne_samba.service
+systemctl disable mne_samba.service
 
-systemctl enable smb.service
-systemctl enable nmb.service
+systemctl enable mne_smb.service
+systemctl enable mne_nmb.service
 
 systemctl daemon-reload
 
@@ -31,5 +31,5 @@ if [ -f "$sambaconf/smb.conf" ]; then
 fi
 awk "$prog" "workgroup=$workgroup" "domain=$domain" "description=$description" $conffile > $sambaconf/smb.conf
 
-systemctl restart smb.service
-systemctl restart nmb.service
+systemctl restart mne_smb.service
+systemctl restart mne_nmb.service

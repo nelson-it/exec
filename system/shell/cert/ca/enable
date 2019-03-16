@@ -12,10 +12,10 @@ mkdir -p $certkeydir  2>&1 >/dev/null
 mkdir -p $certcertdir 2>&1 >/dev/null
 mkdir -p $certcsrdir  2>&1 >/dev/null
 
-chown -R root:$daemonuser $certcadir
-chown -R root:$daemonuser $certkeydir
-chown -R root:$daemonuser $certcertdir
-chown -R root:$daemonuser $certcsrdir
+chown -R root:$daemongroup $certcadir
+chown -R root:$daemongroup $certkeydir
+chown -R root:$daemongroup $certcertdir
+chown -R root:$daemongroup $certcsrdir
 
 chmod 770 $certcadir
 chmod 770 $certkeydir
@@ -26,8 +26,8 @@ conf=`get_data "$getcertconf"`
 get_certconf "$conf"
 
 if [ -f $certcadir/ca.crt ]; then
-    chmod 600 $certcadir/ca.key
-    chmod 644 $certcadir/ca.crt
+    chmod 660 $certcadir/ca.key
+    chmod 664 $certcadir/ca.crt
     if [ "$vaoverwriteInput" != "1" ]; then
         echo "Key allready exists";
     else
@@ -38,6 +38,9 @@ else
     echo $vapasswdInput | openssl genrsa -des3 -passout stdin -out $certcadir/ca.key 4096 >&$logfile 2>&1
     echo $vapasswdInput | openssl req -new -sha256 -x509 -days 3650 -passin stdin -key $certcadir/ca.key -out $certcadir/ca.crt -config $(dirname $0)/../openssl.conf -extensions v3_ca -subj "/CN=$org CA/C=$country/ST=$state/L=$city/O=$org/OU=$orgunit"
 fi
+
+chmod 600 $certcadir/ca.key
+chmod 644 $certcadir/ca.crt
 
 domain=`hostname`
 aliases=$(hostname --all-fqdns | sed -e 's/ *$//' -e "s/ /,/g")

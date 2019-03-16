@@ -20,7 +20,7 @@ if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
         /^    A:/      { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''A'\'' );\n", name,  $2) }
         /^    AAAA:/   { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''AAAA'\'' );\n", name,  $2) }
         /^    CNAME:/  { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''CNAME'\'' );\n", name,  substr($2,1,length($2)-1)) }
-        /^    MX:/     { printf("SELECT mne_system.dnsaddress_ok ( '\'$domain\'',  '\''%s %s'\'', '\''MX'\'' );\n", substr($2,1,length($2) - 1),  num=substr($3,2,length($3) - 2)) }'
+        /^    MX:/     { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s %s'\'', '\''MX'\'' );\n", name, substr($2,1,length($2) - 1),  num=substr($3,2,length($3) - 2)) }'
 
 
   insert=$(samba-tool dns query $(hostname) $domain '@' ALL -k yes | awk "$prog")

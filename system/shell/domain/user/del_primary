@@ -7,4 +7,4 @@ mne_error_ignore=1
 $sambabin/samba-tool user delete $olduser >&$logfile 2>&1
 mne_error_ignore=
 
-. $(dirname $0)/del_standalone
+. $(dirname $BASH_SOURCE)/del_standalone

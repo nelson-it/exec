@@ -1,0 +1,11 @@
+network:
+    version: 2
+    ethernets:
+        ####DEVICE####:
+            dhcp4: true
+            addresses: 
+            - ####ADDR####/####MASK####
+            gateway4: ####GW####
+            nameservers:
+              addresses: [####NAMESERVER####]
+              search: [####SEARCH####]

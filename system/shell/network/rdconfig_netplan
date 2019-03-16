@@ -1,0 +1,28 @@
+#!/bin/bash
+
+devices=
+for device in `ls /sys/class/net`
+do
+  if [ "$device" != "lo" ]; then
+    devices="$devices '$device'"
+    declare netaddr= netmask= netbcast= netgateway= dnssearch= dnsnameserver= dnsdomain=
+
+    netgateway=`route -n       | awk '/^0\.0\.0\.0.*'$device'/ { print $2 }'`
+    netaddr=`ifconfig $device  | awk '/inet[^6]/ { print $2}'`
+    netmask=`ifconfig $device  | awk '/inet[^6]/ { print $4}'`
+    netbcast=`ifconfig $device | awk '/inet[^6]/ { print $6}'`
+    
+    if [ "$netmask" != "" ]; then
+      netmask="$(mask2int $netmask)"
+    fi
+    
+    INSERT="SELECT mne_system.network_add('$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
+    result=`get_data "$INSERT"`
+  
+    if [ "$result" != 'ok' ]; then
+        echo "error during inserting parameter" 1>&2
+        exit 2
+    fi
+    
+  fi
+done

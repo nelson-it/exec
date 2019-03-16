@@ -35,22 +35,52 @@ password=$(dd if=/dev/urandom bs=2048 count=1 2>/dev/null |tr -dc "a-zA-Z0-9"|fo
 bindpassword="$password"
 
 # ==================================================================
+# DNS Alias einrichten
+# ==================================================================
+kinit -F -k -t /etc/mne/dns/dns.keytab dnsadmin@$(echo ${domain^^})
+$sambabin/samba-tool dns add $(hostname) $domain sogo CNAME $(hostname).$domain -k yes >&$logfile 2>&1
+
+# ==================================================================
 # Datenbank und Datenbankbenutzer
 # ==================================================================
 pg_addaccess 'local.*erpdb.*postgres'     'local   erpdb       postgres                         trust'
 pg_addaccess "host.*$sogouser.*127.0.0.1" "host    erpdb       $sogouser          127.0.0.1/32  trust"
 
 pg_adduser $sogouser
-su - postgres -c "echo 'ALTER ROLE $sogouser SET search_path TO ext_sogo;' | psql $DB" >&$logfile 2>&1
-su - postgres -c "echo 'CREATE SCHEMA ext_sogo AUTHORIZATION $sogouser;'   | psql $DB" >&$logfile 2>&1
+echo "ALTER ROLE $sogouser SET search_path TO ext_sogo;" | psql -U postgres $DB >&$logfile 2>&1
+echo "CREATE SCHEMA ext_sogo AUTHORIZATION $sogouser;"   | psql -U postgres $DB >&$logfile 2>&1
+echo "ALTER  SCHEMA ext_sogo OWNER TO $sogouser;"        | psql -U postgres $DB >&$logfile 2>&1
+
+cmd=
+for tbl in $(psql -qAt -c "select tablename from pg_tables where schemaname = 'ext_sogo';" -U postgres $DB)
+do
+  cmd="$cmd""ALTER TABLE ext_sogo.\"$tbl\" owner to $sogouser;"
+done
+
+for tbl in $(psql -qAt -c "select sequence_name from information_schema.sequences where sequence_schema = 'ext_sogo';" -U postgres $DB)
+do
+  cmd="$cmd""ALTER SEQUENCE ext_sogo.\"$tbl\" owner to $sogouser;"
+done
+
+for tbl in $(psql -qAt -c "select table_name from information_schema.views where table_schema = 'ext_sogo';" -U postgres $DB)
+do
+  cmd="$cmd""ALTER VIEW ext_sogo.\"$tbl\" owner to $sogouser;"
+done
+
+cmd="$cmd""GRANT SELECT ON TABLE mne_system.mailaliaspublic TO $sogouser;"
+
+echo "$cmd" | psql -U postgres $DB >&$logfile 2>&1
 
 # ==================================================================
 # Systembenutzer erzeugen
 # ==================================================================
+mne_error_ignore=1
 $sambabin/samba-tool user list | egrep "^$sogouser\$" >/dev/null
 if [ "$?" != "0" ]; then
+  mne_error_ignore=0
   . $(dirname $0)/../domain/user/add_primary >&$logfile 2>&1
 fi 
+mne_error_ignore=0
 
 . $(dirname $0)/../domain/user/setpasswd_primary >&$logfile 2>&1
 

@@ -1,1 +1,1 @@
-sysok=( 14_04 16_04 )
+sysok=( ubuntu_16.04 ubuntu_18.04 )
