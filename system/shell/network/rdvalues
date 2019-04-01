@@ -7,8 +7,10 @@
 . $(dirname $BASH_SOURCE)/functions
 
 acttime=`date +%s`
-DELETE="SELECT mne_system.netdevice_del()"
+DELETE="SELECT mne_system.netdevice_del('$(hostname)')"
 result=`get_data "$DELETE"`
+
+hostname=$(hostname)
 
 for device in `ls /sys/class/net`
 do
@@ -21,7 +23,7 @@ do
       mask="$(mask2int $mask)"
     fi
 
-    INSERT="INSERT INTO mne_system.netdevice (netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime )";
+    INSERT="INSERT INTO mne_system.netdevice (hostname, netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$hostname', '$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime )";
     get_data "$INSERT" >&$logfile 2>&1
   
   fi
@@ -32,7 +34,7 @@ done
 nameserver=`cat /etc/resolv.conf | awk 'BEGIN { found=0; } /^nameserver[ \t]/ { if ( found ) print ", "; print $2; found = 1 }'`
    domain=`hostname --domain`
   
-INSERT="INSERT INTO mne_system.netparam (netparamid, domain, nameserver, search, gw, createuser, createdate, modifyuser, modifydate ) VALUES ('0', '$domain', '$nameserver', '$search', '$gw', session_user, $acttime, session_user, $acttime )";
+INSERT="INSERT INTO mne_system.netparam ( netparamid, domain, nameserver, search, gw, createuser, createdate, modifyuser, modifydate ) VALUES ('$hostname', '$domain', '$nameserver', '$search', '$gw', session_user, $acttime, session_user, $acttime )";
 get_data "$INSERT" >&$logfile 2>&1;
   
 exit 0

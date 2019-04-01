@@ -8,7 +8,7 @@ chown root:mail /var/dovecot >&$logfile 2>&1
 chmod 770       /var/dovecot >&$logfile 2>&1
 chmod g+s       /var/dovecot >&$logfile 2>&1
 
-user=$(hostname)"_sogo"
+user="sogo"$(hostname)
 prog='/####BINDPASSWORD####/ { gsub(/####BINDPASSWORD####/, "'$bindpassword'");  }
       /####BINDUSER####/     { gsub(/####BINDUSER####/,"'$sogouser'");  }      
       /####CERTCERTDIR####/  { gsub(/####CERTCERTDIR####/,"'$certcertdir'"); }

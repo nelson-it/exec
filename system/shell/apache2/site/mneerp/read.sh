@@ -13,10 +13,11 @@ getallsites="SELECT t0.apachesiteid AS apachesiteid,
                  regexp_replace(regexp_replace(t0.conftext, '$bs', '$bs$bs', 'g'), '\n', '$bs""\n', 'g')  AS conftext,
                  t1.port AS port,
                  t1.sport AS sport
-          FROM ( mne_system.apachesite t0 LEFT JOIN mne_system.apache t1 ON ( true )  LEFT JOIN mne_application.folder t2 ON ( t2.name = 'webcontent' ) )"
+          FROM ( mne_system.apachesite t0 LEFT JOIN mne_system.apache t1 ON ( true )  LEFT JOIN mne_application.folder t2 ON ( t2.name = 'webcontent' ) )
+          WHERE t0.hostname = '$(hostname)'"
 
 getsites="$getallsites
-          WHERE t0.lastread < t0.modifydate OR t0.lastread IS NULL"
+          AND t0.lastread < t0.modifydate OR t0.lastread IS NULL"
 
 get_sites()
 {

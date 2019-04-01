@@ -25,14 +25,15 @@ dirs=`( get_data "$getreleases" | \
 echo "$dirs" > $sambaconf/shares.conf
 . ./exec/system/shell/domain/restart/$typ
 
-get_data "$getrelease" $vasharesidInput_old | \
+get_data "$getrelease" $vafolderidInput | \
   while read line; 
   do
     get_releases "$line"
      
-    groupname="Mneshare $(Tolower $name)"
+    groupname="Mneshare $(Tolower $(hostname)) $(Tolower $name)"
     groupnameread="$groupname Read"
-    $sambabin/samba-tool group list | egrep "^$groupname\$" >&$logfile 2>&1
+
+    $sambabin/samba-tool group list | egrep "^$groupname\$" 2>&1 >/dev/null
     if [ ! "$?" = "0" ]; then
       $sambabin/samba-tool group add "$groupname" >&$logfile 2>&1
       $sambabin/samba-tool group add "$groupnameread" >&$logfile 2>&1
@@ -56,17 +57,25 @@ get_data "$getrelease" $vasharesidInput_old | \
     fi
     members=$($sambabin/samba-tool group listmembers "$groupnameread")
     if [ ! "$members" = "" ]; then
-      $sambabin/samba-tool group removemembers "$groupname"     $(user=$members; echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
+      $sambabin/samba-tool group removemembers "$groupnameread" $(user=$members; echo $user | sed -e "s/ /,/g") >&$logfile 2>&1
     fi
 
-    get_data "$getvalidusers" "$name" | \
+    wmember=
+    rmember=
+    kr=
+    kw=
       while read lline;
       do
         get_validusers "$lline";
         if [ "$readwrite" = "r" ]; then
-          $sambabin/samba-tool group addmembers "$groupnameread" "$user" >&$logfile 2>&1;
+          rmember="$rmember$kr$user"
+          kr=","
         else
-          $sambabin/samba-tool group addmembers "$groupname" "$user" >&$logfile 2>&1;
+          wmember="$wmember$kw$user"
+          kw=","
         fi
-    done;
+    done <<< $(get_data "$getvalidusers" "$name" )
+
+    if [ "$rmember" != "" ]; then $sambabin/samba-tool group addmembers "$groupnameread" "$rmember" >&$logfile 2>&1; fi;
+    if [ "$wmember" != "" ]; then $sambabin/samba-tool group addmembers "$groupname"     "$wmember" >&$logfile 2>&1; fi;
   done

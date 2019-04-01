@@ -29,7 +29,7 @@ elif [ "$olduser" != "$user" ] && [ "$user" != "" ]; then
   | sed -e 's/^ *//' | ldapmodify -H ldaps://localhost -D "cn=administrator,cn=users,$dcdomain" -w "$vaadminpasswordInput" -x 
 fi
 
-if [ "$user" != "" ]; then
+if [ "$user" != "" ] && [ "$uid" != "" ] && [ "$gid" != "" ]; then
   eval $($sambabin/samba-tool user show $user 2>/dev/null| awk 'BEGIN { uid=gid=null } /^uidNumber:/ { uid=$2 } /^gidNumber:/ { gid=$2 } END { printf ("olduid=%s;oldgid=%s\n", uid, gid); }')
   if [ "$uid" != "$olduid" ] || [ "$gid" != "$oldgid" ]; then
     echo -e "dn: cn=$user,cn=users,$dcdomain\n"\
@@ -43,3 +43,16 @@ if [ "$user" != "" ]; then
     | sed -e 's/^ *//' | ldapmodify -H ldaps://localhost -D "cn=administrator,cn=users,$dcdomain" -w "$vaadminpasswordInput" -x 
   fi
 fi
+
+$sambabin/samba-tool user show "$user" | egrep '^memberOf' | cut -f2 -d: | sed -e 's/^ *CN=//' -e 's/,.*$//' | 
+ while read line;
+ do
+  $sambabin/samba-tool group removemembers "$line" "$user" 2>&1 >&$logfile ;
+ done 
+
+get_data "$getshare" $user | \
+  while read line; 
+  do
+    get_share "$line"
+    $sambabin/samba-tool group addmembers "Mneshare $(Tolower $(hostname)) $(Tolower $name$read)" "$user" 2>&1 >&$logfile;
+  done

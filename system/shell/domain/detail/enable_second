@@ -9,19 +9,22 @@ fi
 find_template globalextra  domain/enable globalextra_primary.conf
 find_template namedoption  domain/enable named.conf.options
 
-systemctl daemon-reload >&$logfile 2>&1
-systemctl stop mne_smb.service >&$logfile 2>&1
-systemctl stop mne_nmb.service >&$logfile 2>&1
+systemctl daemon-reload
+systemctl stop mne_smb.service
+systemctl stop mne_nmb.service
 
-systemctl disable mne_smb.service >&$logfile 2>&1
-systemctl disable mne_nmb.service >&$logfile 2>&1
+systemctl disable mne_smb.service
+systemctl disable mne_nmb.service
 
 systemctl enable mne_samba.service >&$logfile 2>&1
-systemctl daemon-reload >&$logfile 2>&1
+systemctl daemon-reload
+
+systemctl stop mne_samba.service
 
 save_file $sambaconf/smb.conf
 save_file $dhcpconfig
 save_file /etc/hosts
+save_file /etc/resolv.conf
 save_file $kerberosconfig
 
 # -------------------------------------------
@@ -48,8 +51,10 @@ addr="$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1
 add_host $addr $(hostname) $domain
 
 # -------------------------------------------
-# modify resolv.conf
+# resolv.conf konfigurieren
 # -------------------------------------------
+
+rm -f /etc/resolv.conf
 echo "nameserver $primaryaddr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain $dnssearch" >> /etc/resolv.conf
@@ -95,8 +100,8 @@ mkdir -p /etc/mne/dns >&$logfile 2>&1
 chmod 755 /etc/mne/dns
 
 mne_error_ignore=1
-samba-tool user create www-data --rfc2307-from-nss --random-password --description="Unprivileged user for Webservices"
-samba-tool user setexpiry --noexpiry www-data
+samba-tool user create www-data --rfc2307-from-nss --random-password --description="Unprivileged user for Webservices" 1>&$logfile 2>&1
+samba-tool user setexpiry --noexpiry www-data 1>&$logfile 2>&1
 
 samba-tool user create dnsadmin --random-password --description="Unprivileged user for DNS Admin" 1>&$logfile 2>&1
 mne_error_ignore=0
@@ -122,6 +127,9 @@ mod_dhclient $addr $domain
 echo "nameserver $addr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain" >> /etc/resolv.conf
+
+systemctl disable systemd-resolved 1>&$logfile 2>&1
+systemctl stop systemd-resolved 1>&$logfile 2>&1
 
 echo 'please reboot before continue'
 

@@ -2,8 +2,8 @@
 
 . exec/system/shell/allg/db.sh
 
-getinterfaces="SELECT networkid, typ, addr, mask, broadcast, gateway, nameserver, domain, search FROM mne_system.network ORDER BY networkid;"
-getsingleinterface="SELECT networkid, typ, addr, mask, broadcast, gateway, nameserver, domain, search FROM mne_system.network WHERE networkid = 'par1';"
+getinterfaces="SELECT networkid, typ, addr, mask, broadcast, gateway, nameserver, domain, search FROM mne_system.network WHERE hostname ='$(hostname)' ORDER BY networkid;"
+getsingleinterface="SELECT networkid, typ, addr, mask, broadcast, gateway, nameserver, domain, search FROM mne_system.network WHERE hostname = '$(hostname)' AND networkid = 'par1';"
 get_interfaces()
 {
     par=$1

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+exit_status=0
+
+. exec/system/config/allg.sh
+. exec/system/shell/allg/file.sh
+
+mkdir -p $certextdir  2>&1 >/dev/null
+chown -R root:$daemongroup $certextdir
+chmod 770 $certextdir
+
+cp $certextdir/$vafilenameInput /usr/local/share/ca-certificates/
+/usr/sbin/update-ca-certificates >&$logfile 2>&1

@@ -8,6 +8,7 @@
 DELETE="SELECT mne_system.apachemod_del()"
 result=`get_data "$DELETE"`
 
+hostname=$(hostname);
 INSERT=
 for mod in `ls -1 $apache2rootdir/mods-available | sed -e 's/\.[^.]*$//g' | sort -u`
 do
@@ -15,7 +16,7 @@ do
     if [ -f $apache2rootdir/mods-enabled/$mod.load ]; then
         enabled=true
     fi
-    INSERT="$INSERT""SELECT mne_system.apachemod_add('$mod', $enabled);";
+    INSERT="$INSERT""SELECT mne_system.apachemod_add('$hostname', '$mod', $enabled);";
 done
 
 result=`get_data "$INSERT"`;

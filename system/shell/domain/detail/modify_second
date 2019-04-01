@@ -7,6 +7,18 @@ addr=$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
 add_host $addr $(hostname) $domain
 
 mod_netpar
-systemctl restart mne_samba.service
 
-. $(dirname $0)/../dhcp/enable
+# -------------------------------------------
+# resolv.conf konfigurieren
+# -------------------------------------------
+
+save_file /etc/resolv.conf
+rm -f /etc/resolv.conf
+echo "nameserver $addr" > /etc/resolv.conf
+echo "domain $domain" >> /etc/resolv.conf
+echo "search $domain $dnssearch" >> /etc/resolv.conf
+
+systemctl restart mne_samba.service
+systemctl restart bind9.service
+
+. $(dirname $BASH_SOURCE)/../dhcp/enable

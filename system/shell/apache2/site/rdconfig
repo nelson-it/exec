@@ -17,6 +17,7 @@ fi
 dataroot=`echo "$DATAROOT" | sed -e "s@/@$bs/@g"`
 datalocation=`echo "$DATAROOT$location" | sed -e "s@/@$bs/@g"`
 
+hostname=$(hostname);
 INSERT=
 for site in `ls -1 $apache2rootdir/sites-available`
 do
@@ -63,13 +64,15 @@ do
                                                           -e "s/\(^[^#]*SSLCertificateKeyfile\).*$dataroot\(.*\)/\1  ####DATAROOT####\2/" \
                                                           -e "s/\(^[^#]*SSLCertificateFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/cert\/####DOMAIN####.crt/" \
                                                           -e "s/\(^[^#]*SSLCertificateKeyFile\).*$dataroot.*/\1  ####DATAROOT####\/cert\/key\/####DOMAIN####.key/" \
+                                                          -e "s/\(^[^#]*SSLCertificateFile\).*snakeoil\.\(.*\)/\1 ####DATAROOT####\/cert\/cert\/####DOMAIN####.crt/" \
+                                                          -e "s/\(^[^#]*SSLCertificateKeyFile\).*snakeoil\.\(.*\)/\1 ####DATAROOT####\/cert\/key\/####DOMAIN####.key/" \
                                                           -e "s/\(.*VirtualHost.*\*:\)$port.*>/\1####HTTPPORT####>/" \
                                                           -e "s/\(.*VirtualHost.*\*:\)$sport.*>/\1####HTTPSPORT####>/"`
     
     documentroot=`echo $documentroot | sed -e "s@$datalocation/@@"`
     allsite="$allsite $name"
-    INSERT="$INSERT""SELECT mne_system.apachesite_mod('$name', $enabled, '$domain', '$aliases', '$email', '$documentroot', E'$conf', $httpsonly);";
+    INSERT="$INSERT""SELECT mne_system.apachesite_mod('$hostname', '$name', $enabled, '$domain', '$aliases', '$email', '$documentroot', E'$conf', $httpsonly);";
 done
 
 result=`get_data "$INSERT"`;
-result=`get_data "SELECT mne_system.apachesite_del('$allsite')"`;
+result=`get_data "SELECT mne_system.apachesite_del('$hostname', '$allsite')"`;

@@ -31,11 +31,16 @@ echo "       /etc/mne/dhcpd/update-samba-dns.sh Ux," > /etc/apparmor.d/dhcpd.d/m
   addr=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $2); print $2}'`
  bcast=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $3); print $3}'`
   mask=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $4); print $4}'`
-router=`route -n             | awk '/^0\.0\.0\.0/ { print $2 }'`
+router=`route -n             | awk '/^0\.0\.0\.0.*'$netdevice'/ { print $2 }'`
+
 
 IFS=. read -r i1 i2 i3 i4 <<< "$addr";
 IFS=. read -r m1 m2 m3 m4 <<< "$mask";
 net=$(printf "%d.%d.%d.%d\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))" "$((i4 & m4))")
+
+if [ "$router" = "" ]; then
+  router=$(printf "%d.%d.%d.1\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))")
+fi
 
 if [ "$dhcpstart" != "" ]; then
   IFS=. read -r i1 i2 i3 i4 <<< "$dhcpstart";
@@ -57,16 +62,18 @@ if [ "$dhcpend" != "" ]; then
   fi
 fi
 
-prog='/####UDOMAIN####/ { gsub(/####UDOMAIN####/,"'$udomain'"); }
-      /####DOMAIN####/  { gsub(/####DOMAIN####/,"'$domain'"); }
+search=$(echo "$domain $dnssearch" | sed -e 's/^ */\\"/' -e 's/ *$/\\"/' -e 's/  */\\", \\"/g')
+
+prog='/####DOMAIN####/  { gsub(/####DOMAIN####/,"'$domain'"); }
       /####HOST####/    { gsub(/####HOST####/,"'$(hostname)'"); }
+      /####DSEARCH####/ { gsub(/####DSEARCH####/,"'$search'"); }
       /####ADDR####/    { gsub(/####ADDR####/,"'$addr'"); }
       /####MASK####/    { gsub(/####MASK####/,"'$mask'"); }
       /####NET####/     { gsub(/####NET####/,"'$net'"); }
       /####START####/   { gsub(/####START####/,"'$dhcpstart'"); }
       /####END####/     { gsub(/####END####/,"'$dhcpend'"); }
-      /####ROUTER####/  { gsub(/####ROUTER####/,"'$router'"); }
       /####BCAST####/   { gsub(/####BCAST####/,"'$bcast'"); }
+      /####ROUTER####/  { gsub(/####ROUTER####/,"'$router'"); }
                         { print $0 }'
 
 save_file $dhcpconf/dhcpd.conf

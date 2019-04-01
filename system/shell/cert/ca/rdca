@@ -1,0 +1,8 @@
+#!/bin/bash
+
+exit_status=0
+
+. exec/system/config/allg.sh
+. exec/system/shell/allg/file.sh
+
+cp /usr/local/share/ca-certificates/* $certextdir

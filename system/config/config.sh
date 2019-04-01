@@ -23,6 +23,7 @@ certbasedir=$DATAROOT/cert
  certkeydir=$certbasedir/key
 certcertdir=$certbasedir/cert
  certcsrdir=$certbasedir/csr
+ certextdir=$certbasedir/extern
 
 certscriptdir=exec/system/shell/cert
 

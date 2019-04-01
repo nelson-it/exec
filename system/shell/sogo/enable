@@ -29,10 +29,20 @@ get_domain "$domainconf"
 conf=`get_data "$getcertconf"`
 get_certconf "$conf"
 
+# ==================================================================
+# Systembenutzer erzeugen
+# ==================================================================
 sogouser="sogo"$(hostname)
-user="$sogouser"
-password=$(dd if=/dev/urandom bs=2048 count=1 2>/dev/null |tr -dc "a-zA-Z0-9"|fold -w 64 |head -1)
-bindpassword="$password"
+bindpassword=$(dd if=/dev/urandom bs=2048 count=1 2>/dev/null |tr -dc "a-zA-Z0-9"|fold -w 64 |head -1)
+
+mne_need_error
+$sambabin/samba-tool user list | egrep "^$sogouser\$" >/dev/null
+if [ "$errorresult" != "0" ]; then
+  $sambabin/samba-tool user create "$sogouser" --random-password $option 2>&1 >&$logfile
+  $sambabin/samba-tool user setexpiry --noexpiry "$sogouser" 2>&1 >&$logfile
+fi 
+
+$sambabin/samba-tool user setpassword "$sogouser" --newpassword="$bindpassword" 2>&1 >&$logfile
 
 # ==================================================================
 # DNS Alias einrichten
@@ -47,9 +57,10 @@ pg_addaccess 'local.*erpdb.*postgres'     'local   erpdb       postgres         
 pg_addaccess "host.*$sogouser.*127.0.0.1" "host    erpdb       $sogouser          127.0.0.1/32  trust"
 
 pg_adduser $sogouser
-echo "ALTER ROLE $sogouser SET search_path TO ext_sogo;" | psql -U postgres $DB >&$logfile 2>&1
-echo "CREATE SCHEMA ext_sogo AUTHORIZATION $sogouser;"   | psql -U postgres $DB >&$logfile 2>&1
-echo "ALTER  SCHEMA ext_sogo OWNER TO $sogouser;"        | psql -U postgres $DB >&$logfile 2>&1
+echo "ALTER ROLE $sogouser SET search_path TO ext_sogo;"              | psql -U postgres $DB >&$logfile 2>&1
+echo "CREATE SCHEMA ext_sogo AUTHORIZATION $sogouser;"                | psql -U postgres $DB >&$logfile 2>&1
+echo "ALTER  SCHEMA ext_sogo OWNER TO $sogouser;"                     | psql -U postgres $DB >&$logfile 2>&1
+echo "GRANT SELECT ON TABLE mne_system.mailaliaspublic TO $sogouser;" | psql -U postgres $DB >&$logfile 2>&1
 
 cmd=
 for tbl in $(psql -qAt -c "select tablename from pg_tables where schemaname = 'ext_sogo';" -U postgres $DB)
@@ -71,18 +82,6 @@ cmd="$cmd""GRANT SELECT ON TABLE mne_system.mailaliaspublic TO $sogouser;"
 
 echo "$cmd" | psql -U postgres $DB >&$logfile 2>&1
 
-# ==================================================================
-# Systembenutzer erzeugen
-# ==================================================================
-mne_error_ignore=1
-$sambabin/samba-tool user list | egrep "^$sogouser\$" >/dev/null
-if [ "$?" != "0" ]; then
-  mne_error_ignore=0
-  . $(dirname $0)/../domain/user/add_primary >&$logfile 2>&1
-fi 
-mne_error_ignore=0
-
-. $(dirname $0)/../domain/user/setpasswd_primary >&$logfile 2>&1
 
 # ==================================================================
 # Conf File
@@ -153,8 +152,8 @@ if [  ! -e $certkeydir/sogo.key ] ||  [ ! -e $certcertdir/sogo.crt ]; then
 fi
 domain="$domainsave"
 
-. $(dirname $0)/dovecot/enable
-. $(dirname $0)/postfix/enable
+. $(dirname $BASH_SOURCE)/dovecot/enable
+. $(dirname $BASH_SOURCE)/postfix/enable
 
 a2ensite sogo >&$logfile 2>&1
 $apache2reload >&$logfile 2>&1
