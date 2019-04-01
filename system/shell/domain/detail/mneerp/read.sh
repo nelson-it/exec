@@ -2,7 +2,7 @@
 
 . exec/system/shell/allg/db.sh
 
-getdomain="SELECT domain, workgroup, typ, description, netdevice, primaryname, primaryaddr, dnsforwarder, dnssearch, dhcpstart, dhcpend FROM mne_system.domain;"
+getdomain="SELECT domain, workgroup, typ, description, netdevice, primaryname, primaryaddr, dnsforwarder, dnssearch, dhcpstart, dhcpend FROM mne_system.domain WHERE domainid='$(hostname)';"
 get_domain()
 {
     par=$1

@@ -19,5 +19,6 @@ echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain $dnssearch" >> /etc/resolv.conf
 
 systemctl restart mne_samba.service
+systemctl restart bind9.service
 
-. $(dirname $0)/../dhcp/enable
+. $(dirname $BASH_SOURCE)/../dhcp/enable

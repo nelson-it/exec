@@ -2,7 +2,7 @@
 
 . exec/system/shell/allg/db.sh
 
-getcertconf="SELECT country,state,city,org,orgunit,email FROM mne_system.certca;"
+getcertconf="SELECT country,state,city,org,orgunit,email FROM mne_system.certca WHERE certcaid = '$(hostname)';"
 get_certconf()
 {
     par=$1

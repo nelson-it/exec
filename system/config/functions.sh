@@ -1,8 +1,19 @@
 function mne_need_error()
 {
-  mne_error_ignore=10
-  errorresult=0
+mne_error_ignore=10
+errorresult=0
+
+trap mne_clear_error DEBUG
 }
+
+function mne_clear_error()
+{
+  if [ "$mne_error_ignore" != "10" ]; then
+    trap '' DEBUG
+  fi
+  mne_error_ignore=11
+}
+
 function mne_error_handler()
 {
 # Aufruf mit: trap 'mne_error_handler $BASH_COMMAND $LINENO $?' ERR
@@ -16,7 +27,7 @@ function mne_error_handler()
     return;
   fi
   
-  if [ "$mne_error_ignore" = "10" ]; then
+  if [ "$mne_error_ignore" = "10" ] || [ "$mne_error_ignore" = "11" ]; then
     mne_error_ignore=
     return;
   fi
@@ -87,7 +98,7 @@ function Tolower()
 function pg_adduser()
 {
   ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 up
-  su - postgres -c "echo \"CREATE ROLE $1; ALTER ROLE $1 LOGIN;\" | psql -h 127.0.156.1 >$logfile 2>&1; exit 0"; 
+  su - postgres -c "echo \"CREATE ROLE $1; ALTER ROLE $1 LOGIN;\" | psql -h 127.0.156.1 >&$logfile 2>&1; exit 0"; 
   ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
 }
     
@@ -97,14 +108,14 @@ function pg_addaccess()
   pg_hba=$(echo 'show hba_file' | psql --set ON_ERROR_STOP=on --tuples-only --no-align --field-separator '%%%%'  -U postgres -h 127.0.156.1)
   ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
 
-  egrep $1 $pg_hba >$logfile 2>&1
+  egrep $1 $pg_hba >&$logfile 2>&1
   if [ ! "$?" = "0" ]; then
     mv  $pg_hba $pg_hba"".orig 
 
     echo "$2"            > $pg_hba
     cat $pg_hba"".orig  >> $pg_hba
     chown postgres:postgres $pg_hba
-    su - postgres -c "$(pg_config --bindir)/pg_ctl reload -D $(dirname $pg_hba)" >$logfile 2>&1
+    su - postgres -c "$(pg_config --bindir)/pg_ctl reload -D $(dirname $pg_hba)" >&$logfile 2>&1
   fi
 }
     

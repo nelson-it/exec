@@ -1,3 +1,3 @@
 #!/bin/bash
 
-. $(dirname $0)/enable_primary
+. $(dirname $BASH_SOURCE)/enable_primary

@@ -11,5 +11,5 @@ get_domain "$domainconf"
 
 export PATH=$sambabin:$sambasbin:$PATH
 
-. $(dirname $0)/functions
-. $(dirname $0)/modify_$typ
+. $(dirname $BASH_SOURCE)/functions
+. $(dirname $BASH_SOURCE)/modify_$typ

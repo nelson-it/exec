@@ -4,6 +4,7 @@
 . exec/system/shell/allg/file.sh
 
 find_script domain/detail read.sh
+find_script domain/user   read.sh
 
 domainconf=`get_data "$getdomain"`
 get_domain "$domainconf"

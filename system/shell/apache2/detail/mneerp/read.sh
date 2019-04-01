@@ -2,7 +2,7 @@
 
 . exec/system/shell/allg/db.sh
 
-apacheconf="SELECT port, sport FROM mne_system.apache;"
+apacheconf="SELECT port, sport FROM mne_system.apache WHERE apacheid = '$(hostname)';"
 apache_conf()
 {
     par=$1

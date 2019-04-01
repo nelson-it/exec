@@ -16,7 +16,7 @@ do
       netmask="$(mask2int $netmask)"
     fi
     
-    INSERT="SELECT mne_system.network_add('$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
+    INSERT="SELECT mne_system.network_add('$(hostname)', '$device', '$netaddr', '$netmask', '$netbcast', '$netgateway', '$dnssearch', '$dnsnameserver', '$dnsdomain')";
     result=`get_data "$INSERT"`
   
     if [ "$result" != 'ok' ]; then

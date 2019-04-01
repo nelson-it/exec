@@ -23,14 +23,27 @@ get_user()
     gid=${par/%%%%*}; par=${par#*%%%%}
 }
 
-getvaliduser="SELECT \
-                t0.\"loginname\" AS loginname,\
-                t1.firstname || E' ' || t1.lastname AS fullname\
-              FROM\
-                mne_crm.personowndata t0 LEFT JOIN mne_crm.person t1 ON ( t0.personid = t1.personid) \
-                LEFT JOIN pg_catalog.pg_roles t3 ON ( t0.loginname = t3.rolname)\
-                LEFT JOIN mne_catalog.accessgroup t5 ON ( t3.rolname = t5.member AND t5.group = 'erpsmb' )\
-              WHERE t0.\"loginname\" != '' AND t5.group IS NOT NULL"
+getshare="SELECT t0.\"loginname\", t2.name,  CASE WHEN t1.readwrite THEN '' ELSE ' Read' END
+            FROM mne_crm.personowndata t0
+              LEFT JOIN mne_system.shares t1 ON ( t0.personid = t1.personid )
+              LEFT JOIN mne_application.folder t2 ON ( t2.folderid = t1.folderid )
+            WHERE t0.\"loginname\" = 'par1'"
+
+get_share()
+{
+    par=$1
+    user=${par/%%%%*};  par=${par#*%%%%}
+    name=${par/%%%%*}; par=${par#*%%%%}
+    read=${par/%%%%*}; par=${par#*%%%%}
+}
+            
+getvaliduser="SELECT DISTINCT
+                t2.\"loginname\" AS loginname,
+                t1.firstname || E' ' || t1.lastname AS fullname
+              FROM mne_system.shares t0 
+                 LEFT JOIN mne_crm.person t1 ON ( t0.personid = t1.personid)
+                 LEFT JOIN mne_crm.personowndata t2 ON ( t0.personid = t2.personid) 
+              WHERE t1.personid IS NOT NULL AND t2.\"loginname\" IS NOT NULL"
 
 get_validuser()
 {

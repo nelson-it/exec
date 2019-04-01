@@ -30,7 +30,7 @@ get_data "$getmods" | \
      fi
   done
 
-$apache2restart 2>&1 > /dev/null
+$apache2reload 2>&1 > /dev/null
 
 exit $exit_status
 

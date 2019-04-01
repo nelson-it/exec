@@ -9,7 +9,7 @@ if [ "$typ" = "" ]; then
     exit 0
 fi
 
-. $(dirname $0)/validuser
-. $(dirname $0)/../restart/$typ
+. $(dirname $BASH_SOURCE)/validuser
+. $(dirname $BASH_SOURCE)/../restart/$typ
 
 exit 0
