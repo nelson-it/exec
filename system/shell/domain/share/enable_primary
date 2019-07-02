@@ -50,6 +50,7 @@ get_data "$getrelease" $vafolderidInput | \
       $sambabin/samba-tool ntacl set "$sddl$wr$rd$ww" "$DATAROOT/$location"
     fi
     chmod g+s "$DATAROOT/$location"
+    ( cd "$DATAROOT/$location"; getfacl . | setfacl -R --set-file=- . )
      
     members=$($sambabin/samba-tool group listmembers "$groupname")
     if [ ! "$members" = "" ]; then

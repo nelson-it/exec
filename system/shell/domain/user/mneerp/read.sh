@@ -25,7 +25,7 @@ get_user()
 
 getshare="SELECT t0.\"loginname\", t2.name,  CASE WHEN t1.readwrite THEN '' ELSE ' Read' END
             FROM mne_crm.personowndata t0
-              LEFT JOIN mne_system.shares t1 ON ( t0.personid = t1.personid )
+              INNER JOIN mne_system.shares t1 ON ( t0.personid = t1.personid )
               LEFT JOIN mne_application.folder t2 ON ( t2.folderid = t1.folderid )
             WHERE t0.\"loginname\" = 'par1'"
 
