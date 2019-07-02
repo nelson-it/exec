@@ -138,8 +138,9 @@ if [ -f $certcertdir/$(hostname).crt ]; then
   aliases=$(openssl x509 -in $certcertdir/$(hostname).crt -text -noout | awk '/Subject Alternative Name/ { printit=1; next } { if ( printit ) { print $0; exit }}' | sed -e 's/DNS://g' -e 's/,//g' -e 's/^ *//' )
 fi
 
+mne_need_error
 echo $aliases | fgrep "$(hostname).$domain" >&$logfile
-if [ "$?" != "0" ]; then
+if [ "$errorresult" != "0" ]; then
     aliases="$aliases $(hostname).$domain"
     domain=$(hostname)
     . exec/system/shell/cert/http/mkcert
