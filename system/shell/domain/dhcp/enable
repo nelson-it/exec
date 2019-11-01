@@ -15,10 +15,10 @@ touch /etc/dhcp/fix.conf 1>&$logfile 2>&1
 
 $sambabin/samba-tool user list | egrep "^dnsadmin\$" >/dev/null
 if [ ! "$?" = "0" ]; then
-  samba-tool user create dnsadmin                    --random-password --description="Unprivileged user for DNS Admin"
+  samba-tool user create dnsadmin --random-password --description="Unprivileged user for DNS Admin"
+  samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
 fi
 samba-tool user setexpiry --noexpiry  dnsadmin 1>&$logfile 2>&1
-samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
 
 mkdir -p /etc/mne/dns >&$logfile 2>&1
 samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab 1>&$logfile 2>&1

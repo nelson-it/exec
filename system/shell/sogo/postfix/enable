@@ -32,6 +32,6 @@ do
   chmod 640 $postfixconf/$file
 done
 
-postmap $postfixconf/sasl/passwd
+postmap $postfixconf/sasl/passwd  >/dev/null 2>&1
 
 systemctl restart postfix.service
