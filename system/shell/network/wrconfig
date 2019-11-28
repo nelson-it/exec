@@ -8,8 +8,8 @@ find_script network read.sh
 . $(dirname $BASH_SOURCE)/rdconfig
 
 case ${DISTRIB_RELEASE,,} in
-  12.04|14.04|16.04) . $(dirname $BASH_SOURCE)/wrconfig_interface;;
-  *)                 . $(dirname $BASH_SOURCE)/wrconfig_netplan;;
+  debian_10|ubuntu_16.04) . $(dirname $BASH_SOURCE)/wrconfig_interface;;
+  ubuntu_18.04)           . $(dirname $BASH_SOURCE)/wrconfig_netplan;;
 esac
 
   

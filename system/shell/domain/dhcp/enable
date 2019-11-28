@@ -22,16 +22,18 @@ samba-tool user setexpiry --noexpiry  dnsadmin 1>&$logfile 2>&1
 
 mkdir -p /etc/mne/dns >&$logfile 2>&1
 samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab 1>&$logfile 2>&1
-chown root:dhcpd /etc/mne/dns/dns.keytab
+chown root:$dhcpdgroup /etc/mne/dns/dns.keytab
 chmod 440 /etc/mne/dns/dns.keytab
 
 mod_appamor_dhcp
-echo "       /etc/mne/dhcpd/update-samba-dns.sh Ux," > /etc/apparmor.d/dhcpd.d/mne_dhcpd
+if [ -d /etc/apparmor.d/dhcpd.d ]; then
+  echo "       /etc/mne/dhcpd/update-samba-dns.sh Ux," > /etc/apparmor.d/dhcpd.d/mne_dhcpd
+fi
 
   addr=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $2); print $2}'`
  bcast=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $3); print $3}'`
   mask=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $4); print $4}'`
-router=`route -n             | awk '/^0\.0\.0\.0.*'$netdevice'/ { print $2 }'`
+router=`route -n            | awk '/^0\.0\.0\.0.*'$netdevice'/ { print $2 }'`
 
 
 IFS=. read -r i1 i2 i3 i4 <<< "$addr";
@@ -80,15 +82,19 @@ save_file $dhcpconf/dhcpd.conf
 save_file /etc/mne/dhcpd/update-samba-dns.sh
 
 if [ "$dhcpstart" = "" ] || [ "$dhcpend" = "" ]; then
-  mne_error_ignore=1
-  rm $dhcpconf/dhcpd.conf 2>&$logfile 1>&2
-  mne_error_ignore=
+  systemctl stop    isc-dhcp-server 2>&$logfile 1>&2
+  systemctl disable isc-dhcp-server 2>&$logfile 1>&2
+
 else
   awk "$prog" < $conf > $dhcpconf/dhcpd.conf
   awk "$prog" < $updateconf > /etc/mne/dhcpd/update-samba-dns.sh
 
-  chown root:dhcpd /etc/mne/dhcpd/update-samba-dns.sh
-  chmod 750        /etc/mne/dhcpd/update-samba-dns.sh
+  chown root:$dhcpdgroup /etc/mne/dhcpd/update-samba-dns.sh
+  chmod 750              /etc/mne/dhcpd/update-samba-dns.sh
+  
+  echo INTERFACESv4='"'$netdevice'"' >> /etc/default/isc-dhcp-server
+
+  systemctl enable  isc-dhcp-server 2>&$logfile 1>&2
+  systemctl restart isc-dhcp-server
 fi
 
-systemctl restart isc-dhcp-server

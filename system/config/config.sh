@@ -29,6 +29,7 @@ certscriptdir=exec/system/shell/cert
 
 dhcpconf=/etc/dhcp
 dhcpconfig=/etc/dhcp/dhclient.conf
+dhcpgroup=dhcpd
 
 bindconf=/etc/bind
 apparmorconf=/etc/apparmor.d

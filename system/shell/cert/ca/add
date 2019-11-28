@@ -9,5 +9,9 @@ mkdir -p $certextdir  2>&1 >/dev/null
 chown -R root:$daemongroup $certextdir
 chmod 770 $certextdir
 
+mkdir -p /usr/local/share/ca-certificates  2>&1 >/dev/null
+chown -R root:root /usr/local/share/ca-certificates
+chmod 755 /usr/local/share/ca-certificates
+
 cp $certextdir/$vafilenameInput /usr/local/share/ca-certificates/
 /usr/sbin/update-ca-certificates >&$logfile 2>&1

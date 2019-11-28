@@ -59,12 +59,14 @@ function mne_checksys()
 {
    for i in "${sysok[@]}"
    do
-      if [ "${DISTRIB_ID,,}_${DISTRIB_RELEASE,,}" = "$i" ]; then
+      if [ "${DISTRIB_ID,,}" = "$i" ]; then
         return;
       fi
    done
       
-   echo "${BASH_SOURCE[1]}: system ${DISTRIB_ID,,}_${DISTRIB_RELEASE,,} not supported" 1>&2
+   stack=$(echo "$BASH_SOURCE" | sed -e 's/ /\n          /g');
+   echo "${BASH_SOURCE[1]}: system ${DISTRIB_ID,,} not supported" 1>&2
+   echo "   stack: $stack" 1>&2 
    exit 2;
  }
     

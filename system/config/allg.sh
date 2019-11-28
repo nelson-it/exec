@@ -63,54 +63,52 @@ if [ "$ALLGREADED" = "" ]; then
     . $project/exec/system/config.sh
     
     if [ "$(uname)" = "Linux" ]; then
-      . /etc/lsb-release
+      . /etc/os-release
     fi
 
     if [ "$(uname)" = "Darwin" ]; then
         sw_vers -productVersion | fgrep 10.8 1>&$logfile
         if [ "$?" = "0" ]; then
-          DISTRIB_CODENAME="Mountain Lion"
-          DISTRIB_RELEASE=10_8
+          VERSION_ID=10.8
         fi
     
         sw_vers -productVersion | fgrep 10.11 1>&$logfile
         if [ "$?" = "0" ]; then
-          DISTRIB_CODENAME="El Capitan"
-          DISTRIB_RELEASE=10_11
+          VERSION_ID=10.11
         fi
 
         sw_vers -productVersion | fgrep 10.13 1>&$logfile
         if [ "$?" = "0" ]; then
-          DISTRIB_CODENAME="High Sierra"
-          DISTRIB_RELEASE=10_13
+          VERSION_ID=10.13
         fi
 
-        DISTRIB_ID="MacOS"
-        DISTRIB_DESCRIPTION="$DISTRIB_ID $DISTRIB_RELEASE $DISTRIB_RELEASE"
+        ID="macos"
     fi
     
       mne_error_ignore=1
       . exec/system/config/config.sh >/dev/null 2>&1
       mne_error_ignore=
     
+    DISTRIB_ID="${ID,,}_${VERSION_ID,,}"
+    
     if [ -f "exec/local/system/config/config.sh" ]; then
       . exec/local/system/config/config.sh
     fi
     
+    if [ -f "exec/system/config/${ID,,}/config.sh" ]; then
+      . exec/system/config/${ID,,}/config.sh
+    fi
+
     if [ -f "exec/system/config/${DISTRIB_ID,,}/config.sh" ]; then
       . exec/system/config/${DISTRIB_ID,,}/config.sh
     fi
     
-    if [ -f "exec/system/config/${DISTRIB_ID,,}/${DISTRIB_RELEASE,,}/config.sh" ]; then
-      . exec/system/config/${DISTRIB_ID,,}/${DISTRIB_RELEASE,,}/config.sh
+    if [ -f "exec/local/system/config/${ID,,}/config.sh" ]; then
+      . exec/system/config/${ID,,}/config.sh
     fi
     
     if [ -f "exec/local/system/config/${DISTRIB_ID,,}/config.sh" ]; then
       . exec/system/config/${DISTRIB_ID,,}/config.sh
-    fi
-    
-    if [ -f "exec/local/system/config/${DISTRIB_ID,,}/${DISTRIB_RELEASE,,}/config.sh" ]; then
-      . exec/system/config/${DISTRIB_ID,,}/${DISTRIB_RELEASE,,}/config.sh
     fi
 fi
 

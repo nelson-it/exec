@@ -156,6 +156,22 @@ domain="$domainsave"
 . $(dirname $BASH_SOURCE)/dovecot/enable
 . $(dirname $BASH_SOURCE)/postfix/enable
 
+a2enmod rewrite >&$logfile 2>&1
+a2enmod proxy >&$logfile 2>&1
+a2enmod proxy_http >&$logfile 2>&1
+a2enmod proxy_wstunnel >&$logfile 2>&1
+a2enmod headers >&$logfile 2>&1
+a2enmod dbd >&$logfile 2>&1
+a2enmod authn_dbd >&$logfile 2>&1
+a2enmod authz_dbd >&$logfile 2>&1
+a2enmod authz_host >&$logfile 2>&1
+a2enmod authnz_ldap >&$logfile 2>&1
+a2enmod dav >&$logfile 2>&1
+a2enmod dav_fs >&$logfile 2>&1
+a2enmod ssl >&$logfile 2>&1
+
+a2ensite default-ssl.conf >&$logfile 2>&1
+
 a2ensite sogo >&$logfile 2>&1
 $apache2reload >&$logfile 2>&1
 
