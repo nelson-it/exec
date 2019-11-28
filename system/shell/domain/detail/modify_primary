@@ -12,6 +12,8 @@ mod_netpar
 # resolv.conf konfigurieren
 # -------------------------------------------
 
+echo $dnssearch
+
 save_file /etc/resolv.conf
 rm -f /etc/resolv.conf
 echo "nameserver $addr" > /etc/resolv.conf

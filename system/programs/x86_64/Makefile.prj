@@ -7,4 +7,4 @@
 rexec.WITH_GD       := FALSE
 rexec.WITH_POSTGRES := FALSE
 rexec.LIBS          := mnebase
-rexec.SOURCES       := rexec.cpp 
+rexec.SOURCES       := ../rexec.cpp 

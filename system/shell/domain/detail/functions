@@ -92,8 +92,10 @@ function mod_dhclient()
 
 function mod_appamor_dhcp()
 {
-    sed -e "s/^.*include <dhcpd.d>/  include <dhcpd.d>/" < $apparmorconf/usr.sbin.dhcpd > /tmp/dhcpd.$$
-    mv /tmp/dhcpd.$$ /etc/apparmor.d/usr.sbin.dhcpd
+    if [ -f $apparmorconf/usr.sbin.dhcpd ]; then
+      sed -e "s/^.*include <dhcpd.d>/  include <dhcpd.d>/" < $apparmorconf/usr.sbin.dhcpd > /tmp/dhcpd.$$
+      mv /tmp/dhcpd.$$ /etc/apparmor.d/usr.sbin.dhcpd
+    fi
 }
 
 function mod_appamor_bind()

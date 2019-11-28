@@ -1,6 +1,7 @@
 .SUFFIXES:
 
-     PROJECT_ROOT := ../../../cpp
+     PROJECT_ROOT := ../../../../cpp
+     MAINPROG_DIR := ../
 
 include $(PROJECT_ROOT)/allg/makerules/Makefile.lib
 include Makefile.prj

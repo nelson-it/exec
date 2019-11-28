@@ -5,4 +5,10 @@ exit_status=0
 . exec/system/config/allg.sh
 . exec/system/shell/allg/file.sh
 
-cp /usr/local/share/ca-certificates/* $certextdir
+mkdir -p $certextdir  2>&1 >/dev/null
+chown -R root:$daemongroup $certextdir
+chmod 770 $certextdir
+
+if [ "$(ls -A '/usr/local/share/ca-certificates')" != "" ]; then
+  cp /usr/local/share/ca-certificates/* $certextdir
+fi
