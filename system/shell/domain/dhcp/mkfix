@@ -24,7 +24,9 @@ EOF
   
 mv /tmp/dhcpfix.$$ /etc/dhcp/fix.conf
 
-systemctl restart isc-dhcp-server
+if [ ! "$dhcpstart" = "" ] && [ ! "$dhcpend" = "" ]; then
+  systemctl restart isc-dhcp-server
+fi
     
   
 

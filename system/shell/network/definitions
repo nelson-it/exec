@@ -1,6 +1,6 @@
 
-case ${DISTRIB_RELEASE,,} in
-  12.04|14.04|16.04)
+case "${DISTRIB_ID,,}" in
+  raspbian_10|debian_10|ubuntu_16.04)
     netinterfaces=/etc/network/interfaces
   ;;
   *)

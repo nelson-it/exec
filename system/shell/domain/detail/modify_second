@@ -18,6 +18,9 @@ echo "nameserver $addr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain $dnssearch" >> /etc/resolv.conf
 
+systemctl stop systemd-resolved >/dev/null 2>&1
+systemctl disable systemd-resolved >/dev/null 2>&1
+
 systemctl restart mne_samba.service
 systemctl restart bind9.service
 
