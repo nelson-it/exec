@@ -100,10 +100,12 @@ function mod_appamor_dhcp()
 
 function mod_appamor_bind()
 {
-    fgrep "usr.sbin.named.mnesamba" $apparmorconf/usr.sbin.named 1>&$logfile 2>&1
-    if [ "$?" != "0" ];then
+    if [ -f $apparmorconf/usr.sbin.named ]; then
+      fgrep "usr.sbin.named.mnesamba" $apparmorconf/usr.sbin.named 1>&$logfile 2>&1
+      if [ "$?" != "0" ];then
         sed -e '/^.*include <local\/usr.sbin.named>/a\ \ include <local/usr.sbin.named.mnesamba>' <  $apparmorconf/usr.sbin.named > /tmp/named.$$
         mv /tmp/named.$$  $apparmorconf/usr.sbin.named
+      fi
     fi
 
     echo "/opt/mne/samba/lib/** krm,"                >  $apparmorconf/local/usr.sbin.named.mnesamba
@@ -113,7 +115,11 @@ function mod_appamor_bind()
     echo "/var/lib/mne/samba/private/named.conf kr," >> $apparmorconf/local/usr.sbin.named.mnesamba
     echo "/var/lib/mne/samba/private/dns/** krwk,"   >> $apparmorconf/local/usr.sbin.named.mnesamba
     
-    systemctl restart apparmor
+    mne_need_error
+    systemctl status apparmor 2>/dev/null
+    if [ "$errorresult" = "0" ]; then
+      systemctl restart apparmor
+    fi
 }
 
 

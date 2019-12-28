@@ -1,0 +1,7 @@
+interface ####DEVICE####
+static domain_search=####SEARCH####
+static domain_name_servers=####NAMESERVER####
+static domain_name=####DOMAIN####
+static ip_address=####ADDR####/####MASK####
+static routers=####GW####
+

@@ -127,10 +127,18 @@ echo "nameserver $addr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain $dnssearch" >> /etc/resolv.conf
 
+systemctl stop systemd-resolved >/dev/null 2>&1
+systemctl disable systemd-resolved >/dev/null 2>&1
+
 # -------------------------------------------
 # check kerberos
 # -------------------------------------------
-cp $sambavar/private/krb5.conf $kerberosconfig
+cp $sambavar/private/krb5.conf    $kerberosconfig
+echo ""                       >>  $kerberosconfig
+echo "[realms]"               >>  $kerberosconfig
+echo "  ${domain^^} = {"      >>  $kerberosconfig
+echo "    kdc = localhost:88" >>  $kerberosconfig
+echo "  }"                    >>  $kerberosconfig
 
 sleep 2
 systemctl status mne_samba.service >&$logfile 2>&1

@@ -31,6 +31,8 @@ dhcpconf=/etc/dhcp
 dhcpconfig=/etc/dhcp/dhclient.conf
 dhcpgroup=dhcpd
 
+dhcpcdconffile=/etc/dhcpcd.conf
+
 bindconf=/etc/bind
 apparmorconf=/etc/apparmor.d
 

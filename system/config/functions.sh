@@ -94,7 +94,7 @@ function tolower()
     
 function Tolower()
 {
-  echo "$1"| awk '{printf("%s%s", toupper(substr($0,0,1)), tolower(substr($0,2))) }'
+  echo "$1"| awk '{printf("%s%s", toupper(substr($0,1,1)), tolower(substr($0,2))) }'
 }
     
 function pg_adduser()

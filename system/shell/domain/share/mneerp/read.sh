@@ -25,7 +25,7 @@ getvalidusers="SELECT DISTINCT t2.loginname, CASE WHEN t1.readwrite THEN 'rw' EL
            FROM mne_application.folder t0 \
              LEFT JOIN mne_system.shares t1 ON ( t0.folderid = t1.folderid ) \
              LEFT JOIN mne_crm.personowndata t2 ON ( t1.personid = t2.personid ) \
-           WHERE t0.name = 'par1' AND t1.folderid IS NOT NULL AND t2.loginname != ''"
+           WHERE t0.name = 'par1' AND t1.folderid IS NOT NULL AND t2.loginname != '' AND t0.hostname = '$(hostname)'"
 
 get_validusers()
 {
