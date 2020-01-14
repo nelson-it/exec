@@ -9,8 +9,10 @@ single=
 prog='/####DEVICE####/     { gsub(/####DEVICE####/,device); }
       /####TYP####/        { gsub(/####TYP####/,typ);   }
       /####ADDR####/       { if ( addr == "" ) next; gsub(/####ADDR####/, addr); }
-      /####BCAST####/      { if ( bcast == "" ) next; gsub(/####BCAST####/, bcast); }
       /####MASK####/       { if ( mask == "" ) next; gsub(/####MASK####/, mask); }
+      /####ADDR6####/      { if ( addr == "" ) next; gsub(/####ADDR6####/, addr6); }
+      /####MASK6####/      { if ( mask == "" ) next; gsub(/####MASK6####/, mask6); }
+      /####BCAST####/      { if ( bcast == "" ) next; gsub(/####BCAST####/, bcast); }
       /####GW####/         { if ( gw == "" ) next; gsub(/####GW####/, gw); }
       /####NAMESERVER####/ { if ( nameserver == "" ) next; gsub(/####NAMESERVER####/, nameserver); }
       /####DOMAIN####/     { if ( domain == "" ) next; gsub(/####DOMAIN####/, domain); }
@@ -23,7 +25,7 @@ single=`( get_data "$getinterfaces" | \
      get_interfaces "$line"
      if [ ! "$typ" = "" ]; then
        mask=$(netmask $mask)
-       single=\`awk "$prog" "device=$device" "typ=$typ" "addr=$addr" "bcast=$bcast" "mask=$mask" "gw=$gw" "nameserver=$nameserver" "domain=$domain" "search=$search" $conffile_single\`
+       single=\`awk "$prog" "device=$device" "typ=$typ" "addr=$addr" "bcast=$bcast" "mask=$mask" "gw=$gw""addr6=$addr6" "mask6=$mask6" "nameserver=$nameserver" "domain=$domain" "search=$search" $conffile_single\`
        echo "$single"
      fi
   done )`

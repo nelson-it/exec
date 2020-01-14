@@ -30,6 +30,8 @@ do
 
             /####ADDR####/       { if ( "'$addr'"       == "" || "'$typ'" != "static" ) next; gsub(/####ADDR####/, "'$addr'"); }
             /####MASK####/       { if ( "'$mask'"       == "" || "'$typ'" != "static" ) next; gsub(/####MASK####/, "'$mask'"); }
+            /####ADDR6####/      { if ( "'$addr6'"      == "" || "'$typ'" != "static" ) next; gsub(/####ADDR6####/, "'$addr6'"); }
+            /####MASK6####/      { if ( "'$mask6'"      == "" || "'$typ'" != "static" ) next; gsub(/####MASK6####/, "'$mask6'"); }
             /####GW####/         { if ( "'$gw'"         == "" || "'$typ'" != "static" ) next; gsub(/####GW####/, "'$gw'"); }
             /nameserver/         { if ( "'$nameserver'" == "" || "'$typ'" != "static" ) next; }
             /####NAMESERVER####/ { if ( "'$nameserver'" == "" || "'$typ'" != "static" ) next; gsub(/####NAMESERVER####/, "'$nameserver'"); }

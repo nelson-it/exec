@@ -134,5 +134,5 @@ echo "search $domain" >> /etc/resolv.conf
 systemctl disable systemd-resolved 1>&$logfile 2>&1
 systemctl stop systemd-resolved 1>&$logfile 2>&1
 
-echo 'please reboot before continue'
+needreboot=1
 

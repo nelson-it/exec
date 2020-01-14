@@ -12,22 +12,28 @@ result=`get_data "$DELETE"`
 
 hostname=$(hostname)
 
+prog='/inet[^6]/ { found=1; printf("addr='"'"'%s'"'"'; bcast='"'"'%s'"'"'; mask='"'"'%s'"'"'\n", $2, $6, $4); }
+      /inet6/    { found=1; printf("addr='"'"'%s'"'"'; bcast='"'"''"'"'; mask='"'"'%s'"'"'\n", $2, $4); }
+      END        { if ( ! found ) printf("addr='"'"''"'"'; bcast='"'"''"'"'; mask='"'"''"'"'\n");}'
+
+INSERT=
 for device in `ls /sys/class/net`
 do
   if [ "$device" != "lo" ]; then
-    addr=`ifconfig $device  | awk '/inet[^6]/ { print $2}'`
-    bcast=`ifconfig $device | awk '/inet[^6]/ { print $6}'`
-    mask=`ifconfig $device  | awk '/inet[^6]/ { print $4}'`
 
-    if [ "$mask" != "" ]; then
-      mask="$(mask2int $mask)"
-    fi
-
-    INSERT="INSERT INTO mne_system.netdevice (hostname, netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$hostname', '$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime )";
-    get_data "$INSERT" >&$logfile 2>&1
-  
-  fi
+    INSERT="$INSERT"$(ifconfig $device | awk "$prog" | \
+    while read line
+    do
+       eval $line
+       if [ "$bcast" != "" ] && [ "$mask" != "" ]; then
+         mask="$(mask2int $mask)"
+       fi
+       echo  "INSERT INTO mne_system.netdevice (hostname, netdeviceid, addr, mask, broadcast, createuser, createdate, modifyuser, modifydate ) VALUES ('$hostname', '$device', '$addr', '$mask', '$bcast', session_user, $acttime, session_user, $acttime );";
+     done)
+   fi
 done
+
+get_data "$INSERT" >&$logfile 2>&1
 
         gw=`route -n             | awk 'BEGIN { gws=""; } /^0\.0\.0\.0/ { gws = gws $2 "," } END { print substr(gws, 1, length(gws)-1) }'`
     search=`cat /etc/resolv.conf | awk '/^search[ \t]/ { print $2 }'`
