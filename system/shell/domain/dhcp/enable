@@ -143,8 +143,12 @@ chmod 750              /etc/mne/dhcpd/update-samba-dns.sh
   
 systemctl daemon-reload
 
+dhcp4enable=
+dhcp6enable=
+
 if [ "$dhcpstart" != "" ] && [ "$dhcpend" != "" ]; then
   echo INTERFACESv4='"'$netdevice'"' >> /etc/default/isc-dhcp-server
+  dhcp4enable=1
 else
   echo INTERFACESv4='"''"' >> /etc/default/isc-dhcp-server
 fi
@@ -153,12 +157,18 @@ if [ "$dhcp6start" != "" ] && [ "$dhcp6end" != "" ]; then
   echo INTERFACESv6='"'$netdevice'"' >> /etc/default/isc-dhcp-server
   systemctl enable radvd
   systemctl start radvd
+  dhcp6enable=1
 else
   echo INTERFACESv6='"''"' >> /etc/default/isc-dhcp-server
   systemctl stop    radvd
-  systemctl disable radvd
+  systemctl disable radvd 2>&$ogfile 1>&2
 fi
 
-systemctl enable  isc-dhcp-server 2>&$logfile 1>&2
-systemctl restart isc-dhcp-server
+if [ "$dhcp4enable" = "1" ] || [ "$dhcp6enable" = "1" ]; then
+  systemctl enable  isc-dhcp-server 2>&$logfile 1>&2
+  systemctl restart isc-dhcp-server
+else
+  systemctl stop    isc-dhcp-server
+  systemctl disable isc-dhcp-server 2>&$logfile 1>&2
+fi
 
