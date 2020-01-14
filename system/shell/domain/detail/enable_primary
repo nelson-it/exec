@@ -151,5 +151,5 @@ klist >&$logfile 2>&1
 # -------------------------------------------
 echo "$vaadminpasswordInput" | $sambabin/net rpc rights grant "$(toupper $workgroup)\Domain Admins" SeDiskOperatorPrivilege -Uadministrator -I $addr >&$logfile 2>&1 
 
-echo 'please reboot before continue'
+needreboot=1
 

@@ -1,5 +1,29 @@
 #!/bin/bash
 
+int2ip()
+{
+    local ui32=$1; shift
+    local ip n
+    for n in 1 2 3 4; do
+        ip=$((ui32 & 0xff))${ip:+.}$ip
+        ui32=$((ui32 >> 8))
+    done
+    echo $ip
+}
+netmask()
+{
+    local mask=$((0xffffffff << (32 - $1))); shift
+    int2ip $mask
+}
+
+broadcast()
+{
+    local addr=$(ip2int $1); shift
+    local mask=$((0xffffffff << (32 -$1))); shift
+    int2ip $((addr | ~mask))
+}
+
+
 i=`dpkg --get-selections isc-dhcp-server | expand | fgrep ' install' | wc -l`
 if [ ! "$i" = "1" ]; then
     apt-get update >&$logfile 2>&1
@@ -8,7 +32,9 @@ fi
 
 #find_script domain/dhcp read.sh
 find_template conf        domain/dhcp dhcpd.conf
+find_template conf6       domain/dhcp dhcpd6.conf
 find_template updateconf  domain/dhcp update.conf
+find_template radvdconf   domain/radv radvd.conf
 
 mkdir -p /etc/mne/dhcpd 1>&$logfile 2>&1
 touch /etc/dhcp/fix.conf 1>&$logfile 2>&1
@@ -30,15 +56,14 @@ if [ -d /etc/apparmor.d/dhcpd.d ]; then
   echo "       /etc/mne/dhcpd/update-samba-dns.sh Ux," > /etc/apparmor.d/dhcpd.d/mne_dhcpd
 fi
 
-  addr=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $2); print $2}'`
- bcast=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $3); print $3}'`
-  mask=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $4); print $4}'`
 router=`route -n            | awk '/^0\.0\.0\.0.*'$netdevice'/ { print $2 }'`
 
+mmask=$(netmask $mask)
 
 IFS=. read -r i1 i2 i3 i4 <<< "$addr";
-IFS=. read -r m1 m2 m3 m4 <<< "$mask";
+IFS=. read -r m1 m2 m3 m4 <<< "$mmask";
 net=$(printf "%d.%d.%d.%d\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))" "$((i4 & m4))")
+bcast=`ifconfig $netdevice | awk '/inet[^6]/ {gsub("^.*:", "", $3); print $3}'`
 
 if [ "$router" = "" ]; then
   router=$(printf "%d.%d.%d.1\n" "$((i1 & m1))" "$((i2 & m2))" "$((i3 & m3))")
@@ -64,37 +89,76 @@ if [ "$dhcpend" != "" ]; then
   fi
 fi
 
+net6=$(ipv6calc --addr2compaddr $(sipcalc $addr6/$mask6 | fgrep -i subnet | cut -d '-' -f 2))
+
+if [ "$dhcp6start" != "" ]; then
+  check6=$(ipv6calc --addr2compaddr $(sipcalc $dhcp6start/$mask6 | fgrep -i subnet | cut -d '-' -f 2))
+
+  if [ "$check6" != "$net6" ]; then
+    echo "wrong network for dhcp6 start address"
+    exit 1
+  fi
+fi
+
+if [ "$dhcp6end" != "" ]; then
+  check6=$(ipv6calc --addr2compaddr $(sipcalc $dhcp6end/$mask6 | fgrep -i subnet | cut -d '-' -f 2))
+
+  if [ "$check6" != "$net6" ]; then
+    echo "wrong network for dhcp6 end address"
+    exit 1
+  fi
+fi
+
 search=$(echo "$domain $dnssearch" | sed -e 's/^ */\\"/' -e 's/ *$/\\"/' -e 's/  */\\", \\"/g')
 
-prog='/####DOMAIN####/  { gsub(/####DOMAIN####/,"'$domain'"); }
-      /####HOST####/    { gsub(/####HOST####/,"'$(hostname)'"); }
-      /####DSEARCH####/ { gsub(/####DSEARCH####/,"'$search'"); }
-      /####ADDR####/    { gsub(/####ADDR####/,"'$addr'"); }
-      /####MASK####/    { gsub(/####MASK####/,"'$mask'"); }
-      /####NET####/     { gsub(/####NET####/,"'$net'"); }
-      /####START####/   { gsub(/####START####/,"'$dhcpstart'"); }
-      /####END####/     { gsub(/####END####/,"'$dhcpend'"); }
-      /####BCAST####/   { gsub(/####BCAST####/,"'$bcast'"); }
-      /####ROUTER####/  { gsub(/####ROUTER####/,"'$router'"); }
-                        { print $0 }'
+prog='/####DOMAIN####/     { gsub(/####DOMAIN####/,"'$domain'"); }
+      /####HOST####/       { gsub(/####HOST####/,"'$(hostname)'"); }
+      /####DSEARCH####/    { gsub(/####DSEARCH####/,"'$search'"); }
+      /####ADDR####/       { gsub(/####ADDR####/,"'$addr'"); }
+      /####ADDR6####/      { gsub(/####ADDR6####/,"'$addr6'"); }
+      /####MASK####/       { gsub(/####MASK####/,"'$mmask'"); }
+      /####NET####/        { gsub(/####NET####/,"'$net'"); }
+      /####NET6####/       { gsub(/####NET6####/,"'$net6'"); }
+      /####START####/      { gsub(/####START####/,"'$dhcpstart'"); }
+      /####END####/        { gsub(/####END####/,"'$dhcpend'"); }
+      /####START6####/     { gsub(/####START6####/,"'$dhcp6start'"); }
+      /####END6####/       { gsub(/####END6####/,"'$dhcp6end'"); }
+      /####BCAST####/      { gsub(/####BCAST####/,"'$bcast'"); }
+      /####ROUTER####/     { gsub(/####ROUTER####/,"'$router'"); }
+      /####NETDEVICE####/  { gsub(/####NETDEVICE####/,"'$netdevice'"); }
+                           { print $0 }'
 
 save_file $dhcpconf/dhcpd.conf
+save_file $dhcpconf/dhcpd6.conf
+save_file /etc/radvd.conf
 save_file /etc/mne/dhcpd/update-samba-dns.sh
 
-if [ "$dhcpstart" = "" ] || [ "$dhcpend" = "" ]; then
-  systemctl stop    isc-dhcp-server 2>&$logfile 1>&2
-  systemctl disable isc-dhcp-server 2>&$logfile 1>&2
+awk "$prog" < $conf       > $dhcpconf/dhcpd.conf
+awk "$prog" < $conf6      > $dhcpconf/dhcpd6.conf
+awk "$prog" < $updateconf > /etc/mne/dhcpd/update-samba-dns.sh
+awk "$prog" < $radvdconf  > /etc/radvd.conf
 
-else
-  awk "$prog" < $conf > $dhcpconf/dhcpd.conf
-  awk "$prog" < $updateconf > /etc/mne/dhcpd/update-samba-dns.sh
-
-  chown root:$dhcpdgroup /etc/mne/dhcpd/update-samba-dns.sh
-  chmod 750              /etc/mne/dhcpd/update-samba-dns.sh
+chown root:$dhcpdgroup /etc/mne/dhcpd/update-samba-dns.sh
+chmod 750              /etc/mne/dhcpd/update-samba-dns.sh
   
-  echo INTERFACESv4='"'$netdevice'"' >> /etc/default/isc-dhcp-server
+systemctl daemon-reload
 
-  systemctl enable  isc-dhcp-server 2>&$logfile 1>&2
-  systemctl restart isc-dhcp-server
+if [ "$dhcpstart" != "" ] && [ "$dhcpend" != "" ]; then
+  echo INTERFACESv4='"'$netdevice'"' >> /etc/default/isc-dhcp-server
+else
+  echo INTERFACESv4='"''"' >> /etc/default/isc-dhcp-server
 fi
+
+if [ "$dhcp6start" != "" ] && [ "$dhcp6end" != "" ]; then
+  echo INTERFACESv6='"'$netdevice'"' >> /etc/default/isc-dhcp-server
+  systemctl enable radvd
+  systemctl start radvd
+else
+  echo INTERFACESv6='"''"' >> /etc/default/isc-dhcp-server
+  systemctl stop    radvd
+  systemctl disable radvd
+fi
+
+systemctl enable  isc-dhcp-server 2>&$logfile 1>&2
+systemctl restart isc-dhcp-server
 

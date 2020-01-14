@@ -33,8 +33,10 @@ dhcp=$(echo "$interfaces" | \
     if [ "$typ" = "static" ]; then
       prog='/####DEVICE####/     { gsub(/####DEVICE####/,"'$device'"); }
             /####DOMAIN####/     { gsub(/####DOMAIN####/, "'$domain'"); }
-            /####ADDR####/       { gsub(/####ADDR####/, "'$addr'"); }
+            /####ADDR####/       { if ( "'$addr'"       == "" || "'$typ'" != "static" ) next; gsub(/####ADDR####/, "'$addr'"); }
             /####MASK####/       { gsub(/####MASK####/, "'$mask'"); }
+            /####ADDR6####/      { if ( "'$addr6'"      == "" || "'$typ'" != "static" ) next; gsub(/####ADDR6####/, "'$addr6'"); }
+            /####MASK6####/      { gsub(/####MASK6####/, "'$mask6'"); }
             /####GW####/         { gsub(/####GW####/, "'$gw'"); }
             /####NAMESERVER####/ { gsub(/####NAMESERVER####/, "'$nameserver'"); }
             /####SEARCH####/     { gsub(/####SEARCH####/, "'$search'"); }
@@ -52,5 +54,9 @@ save_file "$dhcpcdconffile"
 awk "$prog" "deviceconfig=$dhcp" "$dhcpcd_conf" > "$dhcpcdconffile"
 
 systemctl daemon-reload
-systemctl restart dhcpcd.service
 
+mne_need_error
+diff -q $dhcpcdconffile $savedfile >/dev/null
+if [ ! "$errorresult" = "0" ]; then
+  needreboot=1
+fi

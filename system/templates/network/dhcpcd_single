@@ -3,5 +3,6 @@ static domain_search=####SEARCH####
 static domain_name_servers=####NAMESERVER####
 static domain_name=####DOMAIN####
 static ip_address=####ADDR####/####MASK####
+static ip6_address=####ADDR6####/####MASK6####
 static routers=####GW####
 

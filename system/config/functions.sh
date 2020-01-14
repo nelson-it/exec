@@ -52,6 +52,10 @@ function cleanup
   ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
   
   echo End ===================================================================== 1>&$logfile
+  if [ "$needreboot" != "" ]; then
+      echo "reboot in 1 min"
+      shutdown -r 1>&$logfile 2>&$logfile
+  fi
   sleep 0
 }
 

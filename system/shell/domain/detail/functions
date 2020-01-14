@@ -92,6 +92,10 @@ function mod_dhclient()
 
 function mod_appamor_dhcp()
 {
+    if [ "$DISTRIB_ID" = "raspbian_10" ]; then
+      return;
+    fi
+    
     if [ -f $apparmorconf/usr.sbin.dhcpd ]; then
       sed -e "s/^.*include <dhcpd.d>/  include <dhcpd.d>/" < $apparmorconf/usr.sbin.dhcpd > /tmp/dhcpd.$$
       mv /tmp/dhcpd.$$ /etc/apparmor.d/usr.sbin.dhcpd
@@ -100,6 +104,10 @@ function mod_appamor_dhcp()
 
 function mod_appamor_bind()
 {
+    if [ "$DISTRIB_ID" = "raspbian_10" ]; then
+      return;
+    fi
+   
     if [ -f $apparmorconf/usr.sbin.named ]; then
       fgrep "usr.sbin.named.mnesamba" $apparmorconf/usr.sbin.named 1>&$logfile 2>&1
       if [ "$?" != "0" ];then
