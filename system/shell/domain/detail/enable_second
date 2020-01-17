@@ -10,13 +10,14 @@ find_template globalextra  domain/enable globalextra_primary.conf
 find_template namedoption  domain/enable named.conf.options
 
 systemctl daemon-reload
-systemctl stop mne_smb.service
-systemctl stop mne_nmb.service
+systemctl stop mne_smb.service 2>&$logfile 1>&2
+systemctl stop mne_nmb.service 2>&$logfile 1>&2
 
-systemctl disable mne_smb.service
-systemctl disable mne_nmb.service
+systemctl disable mne_smb.service 2>&$logfile 1>&2
+systemctl disable mne_nmb.service 2>&$logfile 1>&2
 
 systemctl enable mne_samba.service >&$logfile 2>&1
+systemctl enable bind9.service 2>&$logfile 1>&2
 systemctl daemon-reload
 
 systemctl stop mne_samba.service
@@ -65,8 +66,7 @@ systemctl disable systemd-resolved >/dev/null 2>&1
 # -------------------------------------------
 # check kerberos
 # -------------------------------------------
-udomain=$(echo "$domain"| awk '{print toupper($0)}')
-mod_kerberos $udomain
+cp $sambavar/private/krb5.conf       $kerberosconfig
 
 admin=$vaadminInput
 if [ "$admin" = "" ];then
@@ -107,10 +107,10 @@ samba-tool user create www-data --rfc2307-from-nss --random-password --descripti
 samba-tool user setexpiry --noexpiry www-data 1>&$logfile 2>&1
 
 samba-tool user create dnsadmin --random-password --description="Unprivileged user for DNS Admin" 1>&$logfile 2>&1
-mne_error_ignore=0
 
 samba-tool user setexpiry --noexpiry  dnsadmin 1>&$logfile 2>&1
 samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
+mne_error_ignore=0
 
 samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab >&$logfile 2>&1
 chown root:dhcpd /etc/mne/dns/dns.keytab
@@ -133,6 +133,15 @@ echo "search $domain" >> /etc/resolv.conf
 
 systemctl disable systemd-resolved 1>&$logfile 2>&1
 systemctl stop systemd-resolved 1>&$logfile 2>&1
+
+# -------------------------------------------
+# kerberos localhost als server eintragen
+# -------------------------------------------
+echo ""                       >>  $kerberosconfig
+echo "[realms]"               >>  $kerberosconfig
+echo "  ${domain^^} = {"      >>  $kerberosconfig
+echo "    kdc = localhost:88" >>  $kerberosconfig
+echo "  }"                    >>  $kerberosconfig
 
 needreboot=1
 

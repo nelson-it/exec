@@ -34,19 +34,23 @@ update-ca-certificates >&$logfile 2>&1
 # bereinigen
 # -------------------------------------------
 systemctl daemon-reload
-systemctl stop mne_smb.service
-systemctl stop mne_nmb.service
+systemctl stop mne_smb.service 2>&$logfile 1>&2
+systemctl stop mne_nmb.service 2>&$logfile 1>&2
 
-systemctl disable mne_smb.service
-systemctl disable mne_nmb.service
+systemctl disable mne_smb.service 2>&$logfile 1>&2
+systemctl disable mne_nmb.service 2>&$logfile 1>&2
 
 systemctl enable mne_samba.service >&$logfile 2>&1
 systemctl daemon-reload
 
-systemctl stop mne_samba.service
+systemctl stop mne_samba.service 2>&$logfile 1>&2
 
-systemctl disable systemd-resolved
-systemctl stop systemd-resolved
+systemctl stop systemd-resolved 2>&$logfile 1>&2
+systemctl disable systemd-resolved 2>&$logfile 1>&2
+
+systemctl enable bind9.service 2>&$logfile 1>&2
+
+systemctl daemon-reload
 
 save_file $sambaconf/smb.conf
 save_file $dhcpconfig

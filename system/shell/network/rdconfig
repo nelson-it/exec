@@ -9,6 +9,5 @@
 . $(dirname $BASH_SOURCE)/functions
 
 case $DISTRIB_ID in
-  ubuntu_16.04)                       . $(dirname $BASH_SOURCE)/rdconfig_interface;;
   raspbian_10|debian_10|ubuntu_18.04) . $(dirname $BASH_SOURCE)/rdconfig_ifconfig;;
 esac

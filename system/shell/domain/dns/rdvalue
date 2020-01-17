@@ -16,12 +16,30 @@ if [ "$typ" = "primary" ] || [ "$typ" = "second" ]; then
   acttime=$(date +%s)
   check_passwd
 
-  prog='/^  Name=/     { name=""; split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
-        /^    A:/      { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''A'\'' );\n", name,  $2) }
-        /^    AAAA:/   { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''AAAA'\'' );\n", name,  $2) }
-        /^    CNAME:/  { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s'\'', '\''CNAME'\'' );\n", name,  substr($2,1,length($2)-1)) }
-        /^    MX:/     { if ( name != "" ) printf("SELECT mne_system.dnsaddress_ok ( '\''%s'\'',  '\''%s %s'\'', '\''MX'\'' );\n", name, substr($2,1,length($2) - 1),  num=substr($3,2,length($3) - 2)) }'
-  insert=$(samba-tool dns query $(hostname) $domain '@' ALL -k yes | awk "$prog")
+prog='/^  Name=/     { name=""; split($1,n,"="); sub(/,/,"",n[2]); name=n[2]; next}
+      /^    A:/      { if ( name != "" ) printf("A %s %s\n", name,  $2) }
+      /^    AAAA:/   { if ( name != "" ) printf("AAAA %s %s\n", name,  $2) }
+      /^    CNAME:/  { if ( name != "" ) printf("CNAME %s %s\n", name,  substr($2,1,length($2)-1)) }
+      /^    MX:/     { if ( name != "" ) printf("MX %s %s %s\n", name, substr($2,1,length($2) - 1),  num=substr($3,2,length($3) - 2)) }'
+
+  insert=$(samba-tool dns query $(hostname) $domain '@' ALL -k yes | awk "$prog" | \
+  while read line
+  do
+    a=($line)
+    typ=${a[0]}
+    name=${a[1]}
+    addr=${a[2]}
+
+    if [[ "$addr" =~ .*:.* ]]; then
+      addr=$(ipv6calc --addr2compaddr $addr)
+    fi
+
+    if [ "$typ" = "MX" ]; then
+      addr="$addr ${a[3]}"
+    fi
+
+    echo "SELECT mne_system.dnsaddress_ok ( '$name', '$addr', '$typ' );"
+  done )
   result=$(get_data "$insert");
 
   result=$(get_data "$cleardnsaddress" $acttime)

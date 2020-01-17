@@ -10,13 +10,28 @@ fi
 
 systemctl daemon-reload
 
-systemctl stop    mne_samba.service
-systemctl disable mne_samba.service
+systemctl stop    mne_samba.service 2>&$logfile 1>&2
+systemctl disable mne_samba.service 2>&$logfile 1>&2
 
-systemctl enable mne_smb.service
-systemctl enable mne_nmb.service
+systemctl stop    bind9.service 2>&$logfile 1>&2
+systemctl disable bind9.service 2>&$logfile 1>&2
 
-systemctl daemon-reload
+systemctl enable mne_smb.service 2>&$logfile 1>&2
+systemctl enable mne_nmb.service 2>&$logfile 1>&2
+
+
+# -------------------------------------------
+# resolv.conf konfigurieren
+# -------------------------------------------
+
+rm -f /etc/resolv.conf
+ln -s /run/systemd/resolve//stub-resolv.conf /etc/resolv.conf
+
+systemctl enable systemd-resolved 2>&$logfile 1>&2
+
+# -------------------------------------------
+# samba konfigurieren
+# -------------------------------------------
 
 mkdir -p /var/log/samba 2>/dev/null
 
@@ -31,5 +46,7 @@ if [ -f "$sambaconf/smb.conf" ]; then
 fi
 awk "$prog" "workgroup=$workgroup" "domain=$domain" "description=$description" $conffile > $sambaconf/smb.conf
 
-systemctl restart mne_smb.service
-systemctl restart mne_nmb.service
+systemctl daemon-reload
+systemctl restart systemd-resolved 2>&$logfile 1>&2
+systemctl restart mne_smb.service 2>&$logfile 1>&2
+systemctl restart mne_nmb.service 2>&$logfile 1>&2
