@@ -12,7 +12,7 @@ domainconf=`get_data "$getdomain"`
 get_domain "$domainconf"
 
 if [ "$description" = "" ]; then
-    description="%h server (Samba, Ubuntu)"
+    description="%h server (Samba,Nelson - technische Informatik)"
 fi
 
 udomain=$(echo "$domain"| awk '{print toupper($0)}')
@@ -22,4 +22,9 @@ export PATH=$sambabin:$sambasbin:$PATH
 
 . $(dirname $BASH_SOURCE)/functions
 . $(dirname $BASH_SOURCE)/enable_$typ
-. $(dirname $BASH_SOURCE)/../dhcp/enable
+
+if [ "$typ" = "standalone" ]; then
+  . $(dirname $BASH_SOURCE)/../dhcp/disable
+else
+  . $(dirname $BASH_SOURCE)/../dhcp/enable
+fi

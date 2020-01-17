@@ -92,7 +92,7 @@ function mod_dhclient()
 
 function mod_appamor_dhcp()
 {
-    if [ "$DISTRIB_ID" = "raspbian_10" ]; then
+    if [ "$DISTRIB_ID" = "raspbian_10" ] || [ "$DISTRIB_ID" = "debian_10" ]; then
       return;
     fi
     
@@ -104,7 +104,7 @@ function mod_appamor_dhcp()
 
 function mod_appamor_bind()
 {
-    if [ "$DISTRIB_ID" = "raspbian_10" ]; then
+    if [ "$DISTRIB_ID" = "raspbian_10" ] || [ "$DISTRIB_ID" = "debian_10" ]; then
       return;
     fi
    
@@ -124,9 +124,9 @@ function mod_appamor_bind()
     echo "/var/lib/mne/samba/private/dns/** krwk,"   >> $apparmorconf/local/usr.sbin.named.mnesamba
     
     mne_need_error
-    systemctl status apparmor 2>/dev/null
+    systemctl status apparmor 1>&$logfile 2>&1
     if [ "$errorresult" = "0" ]; then
-      systemctl restart apparmor
+      systemctl restart apparmor 1>&$logfile 2>&1
     fi
 }
 

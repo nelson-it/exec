@@ -1,0 +1,16 @@
+#!/bin/bash
+
+systemctl daemon-reload
+
+systemctl stop    radvd 2>&$logfile 1>&2
+systemctl disable radvd 2>&$logfile 1>&2
+
+systemctl stop    isc-dhcp-server 2>&$logfile 1>&2
+systemctl disable isc-dhcp-server 2>&$logfile 1>&2
+
+if [ "$DISTRIB_ID" = "ubuntu_18.04" ]; then
+    systemctl stop    isc-dhcp-server6 2>&$logfile 1>&2
+    systemctl disable isc-dhcp-server6 2>&$logfile 1>&2
+fi
+
+systemctl daemon-reload

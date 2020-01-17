@@ -5,6 +5,7 @@ network:
             dhcp4: true
             addresses: 
             - ####ADDR####/####MASK####
+            - ####ADDR6####/####MASK6####
             gateway4: ####GW####
             nameservers:
               addresses: [####NAMESERVER####]

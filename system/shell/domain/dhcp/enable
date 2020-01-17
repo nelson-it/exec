@@ -155,13 +155,24 @@ fi
 
 if [ "$dhcp6start" != "" ] && [ "$dhcp6end" != "" ]; then
   echo INTERFACESv6='"'$netdevice'"' >> /etc/default/isc-dhcp-server
-  systemctl enable radvd
-  systemctl start radvd
-  dhcp6enable=1
+  systemctl enable radvd 2>&$logfile 1>&2
+  systemctl start radvd 2>&$logfile 1>&2
+
+  if [ "$DISTRIB_ID" = "ubuntu_18.04" ]; then
+    systemctl enable  isc-dhcp-server6 2>&$logfile 1>&2
+    systemctl restart isc-dhcp-server6
+  else
+    dhcp6enable=1
+  fi
 else
   echo INTERFACESv6='"''"' >> /etc/default/isc-dhcp-server
-  systemctl stop    radvd
-  systemctl disable radvd 2>&$ogfile 1>&2
+  systemctl stop    radvd 2>&$logfile 1>&2
+  systemctl disable radvd 2>&$logfile 1>&2
+
+  if [ "$DISTRIB_ID" = "ubuntu_18.04" ]; then
+    systemctl stop    isc-dhcp-server6
+    systemctl disable isc-dhcp-server6 2>&$logfile 1>&2
+  fi
 fi
 
 if [ "$dhcp4enable" = "1" ] || [ "$dhcp6enable" = "1" ]; then
