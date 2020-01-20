@@ -1,0 +1,50 @@
+#!/bin/bash
+
+find_template conffile        network interfaces
+find_template conffile_single network interfaces_single
+
+conf=
+single=
+
+prog='/####DEVICE####/     { gsub(/####DEVICE####/,device); }
+      /####TYP####/        { gsub(/####TYP####/,typ);   }
+      /####ADDR####/       { if ( addr == "" ) next; gsub(/####ADDR####/, addr); }
+      /####MASK####/       { if ( mask == "" ) next; gsub(/####MASK####/, mask); }
+      /inet6/              { if ( addr6 == "" && mask6 == "") next; }
+      /####ADDR6####/      { if ( addr6 == "" ) next; gsub(/####ADDR6####/, addr6); }
+      /####MASK6####/      { if ( mask6 == "" ) next; gsub(/####MASK6####/, mask6); }
+      /####BCAST####/      { if ( bcast == "" ) next; gsub(/####BCAST####/, bcast); }
+      /####GW####/         { if ( gw == "" ) next; gsub(/####GW####/, gw); }
+      /####NAMESERVER####/ { if ( nameserver == "" ) next; gsub(/####NAMESERVER####/, nameserver); }
+      /####DOMAIN####/     { if ( domain == "" ) next; gsub(/####DOMAIN####/, domain); }
+      /####SEARCH####/     { if ( search == "" ) next; gsub(/####SEARCH####/, search); }
+                           { print $0 }'
+
+single=`( get_data "$getinterfaces" | \
+  while read line; 
+  do
+     get_interfaces "$line"
+     if [ ! "$typ" = "" ]; then
+       if [ "$mask" != "" ]; then
+         mask=$(netmask $mask)
+       fi
+       single=\`awk "$prog" "device=$device" "typ=$typ" "addr=$addr" "bcast=$bcast" "mask=$mask" "gw=$gw" "addr6=$addr6" "mask6=$mask6" "nameserver=$nameserver" "domain=$domain" "search=$search" $conffile_single\`
+       echo "$single"
+     fi
+  done )`
+                            
+prog='/####DEVICECONFIG####/ { gsub(/####DEVICECONFIG####/,deviceconfig); }
+                           { print $0 }'
+                           
+conf="`awk "$prog" "deviceconfig=$single" $conffile`"
+mv $netinterfaces $netinterfaces""_`date +"%d.%m.%Y_%H:%M:%S"`
+echo "$conf" >  $netinterfaces
+
+for device in `ls /sys/class/net`
+do
+  ifconfig $device down
+  ifconfig $device up
+done
+
+resolvconf -u
+needreboot=1

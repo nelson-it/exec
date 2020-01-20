@@ -25,9 +25,9 @@ systemctl enable mne_nmb.service 2>&$logfile 1>&2
 # -------------------------------------------
 
 rm -f /etc/resolv.conf
-ln -s /run/systemd/resolve//stub-resolv.conf /etc/resolv.conf
+ln -s "$resolvconflink" /etc/resolv.conf
 
-systemctl enable systemd-resolved 2>&$logfile 1>&2
+systemctl enable "$resolvconfservice" 2>&$logfile 1>&2
 
 # -------------------------------------------
 # samba konfigurieren
@@ -47,6 +47,6 @@ fi
 awk "$prog" "workgroup=$workgroup" "domain=$domain" "description=$description" $conffile > $sambaconf/smb.conf
 
 systemctl daemon-reload
-systemctl restart systemd-resolved 2>&$logfile 1>&2
-systemctl restart mne_smb.service 2>&$logfile 1>&2
-systemctl restart mne_nmb.service 2>&$logfile 1>&2
+systemctl restart "$resolvconfservice" 2>&$logfile 1>&2
+systemctl restart mne_smb.service      2>&$logfile 1>&2
+systemctl restart mne_nmb.service      2>&$logfile 1>&2
