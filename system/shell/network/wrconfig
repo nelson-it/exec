@@ -8,9 +8,9 @@ find_script network read.sh
 . $(dirname $BASH_SOURCE)/rdconfig
 
 case ${DISTRIB_ID,,} in
-  ubuntu_16.04)          . $(dirname $BASH_SOURCE)/wrconfig_interface;;
-  raspbian_10|debian_10) . $(dirname $BASH_SOURCE)/wrconfig_dhcpcd;;
-  ubuntu_18.04)          . $(dirname $BASH_SOURCE)/wrconfig_netplan;;
+  debian_10)     . $(dirname $BASH_SOURCE)/wrconfig_interface;;
+  raspbian_10)   . $(dirname $BASH_SOURCE)/wrconfig_dhcpcd;;
+  ubuntu_18.04)  . $(dirname $BASH_SOURCE)/wrconfig_netplan;;
 esac
 
   

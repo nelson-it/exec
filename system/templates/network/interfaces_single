@@ -9,3 +9,7 @@ iface ####DEVICE#### inet ####TYP####
         dns-nameservers ####NAMESERVER####
         dns-search ####SEARCH####
         dns-domain ####DOMAIN####
+
+iface ####DEVICE#### inet6 ####TYP####
+        address ####ADDR6####
+        netmask ####MASK6####

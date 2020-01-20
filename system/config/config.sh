@@ -27,6 +27,9 @@ certcertdir=$certbasedir/cert
 
 certscriptdir=exec/system/shell/cert
 
+resolvconflink=/run/systemd/resolve/stub-resolv.conf
+resolvconfservice=systemd-resolved
+
 dhcpconf=/etc/dhcp
 dhcpconfig=/etc/dhcp/dhclient.conf
 dhcpgroup=dhcpd

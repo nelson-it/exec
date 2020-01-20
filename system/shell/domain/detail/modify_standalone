@@ -1,1 +1,5 @@
 #!/bin/bash
+
+if [ "${DISTRIB_ID,,}" = "debian_10" ]; then
+  resolvconf -u
+fi

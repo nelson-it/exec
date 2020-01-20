@@ -40,13 +40,8 @@ systemctl stop mne_nmb.service 2>&$logfile 1>&2
 systemctl disable mne_smb.service 2>&$logfile 1>&2
 systemctl disable mne_nmb.service 2>&$logfile 1>&2
 
-systemctl enable mne_samba.service >&$logfile 2>&1
-systemctl daemon-reload
-
-systemctl stop mne_samba.service 2>&$logfile 1>&2
-
-systemctl stop systemd-resolved 2>&$logfile 1>&2
-systemctl disable systemd-resolved 2>&$logfile 1>&2
+systemctl enable mne_samba.service 2>&$logfile 1>&2
+systemctl stop mne_samba.service   2>&$logfile 1>&2
 
 systemctl enable bind9.service 2>&$logfile 1>&2
 
@@ -130,9 +125,6 @@ rm -f /etc/resolv.conf
 echo "nameserver $addr" > /etc/resolv.conf
 echo "domain $domain" >> /etc/resolv.conf
 echo "search $domain $dnssearch" >> /etc/resolv.conf
-
-systemctl stop systemd-resolved >/dev/null 2>&1
-systemctl disable systemd-resolved >/dev/null 2>&1
 
 # -------------------------------------------
 # check kerberos
