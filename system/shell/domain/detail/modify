@@ -13,3 +13,5 @@ export PATH=$sambabin:$sambasbin:$PATH
 
 . $(dirname $BASH_SOURCE)/functions
 . $(dirname $BASH_SOURCE)/modify_$typ
+
+. $(dirname $BASH_SOURCE)/../../network/wrconfig

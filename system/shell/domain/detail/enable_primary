@@ -50,7 +50,6 @@ systemctl daemon-reload
 save_file $sambaconf/smb.conf
 save_file $dhcpconfig
 save_file /etc/hosts
-save_file /etc/resolv.conf
 save_file $kerberosconfig
 
 rm_config
@@ -116,15 +115,6 @@ systemctl restart bind9.service
 # check name-server in dhclient.conf
 # -------------------------------------------
 mod_dhclient $addr $domain
-
-# -------------------------------------------
-# resolv.conf konfigurieren
-# -------------------------------------------
-
-rm -f /etc/resolv.conf
-echo "nameserver $addr" > /etc/resolv.conf
-echo "domain $domain" >> /etc/resolv.conf
-echo "search $domain $dnssearch" >> /etc/resolv.conf
 
 # -------------------------------------------
 # check kerberos

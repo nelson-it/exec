@@ -23,6 +23,8 @@ export PATH=$sambabin:$sambasbin:$PATH
 . $(dirname $BASH_SOURCE)/functions
 . $(dirname $BASH_SOURCE)/enable_$typ
 
+. $(dirname $BASH_SOURCE)/../../network/wrconfig
+  
 if [ "$typ" = "standalone" ]; then
   . $(dirname $BASH_SOURCE)/../dhcp/disable
 else
