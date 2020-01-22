@@ -126,6 +126,9 @@ prog='/####DOMAIN####/     { gsub(/####DOMAIN####/,"'$domain'"); }
       /####BCAST####/      { gsub(/####BCAST####/,"'$bcast'"); }
       /####ROUTER####/     { gsub(/####ROUTER####/,"'$router'"); }
       /####NETDEVICE####/  { gsub(/####NETDEVICE####/,"'$netdevice'"); }
+      /####DBHOST####/     { gsub(/####DBHOST####/,"'$DBHOST'"); }
+      /####DBUSER####/     { gsub(/####DBUSER####/,"'$DBUSER'"); }
+      /####DB####/         { gsub(/####DB####/,"'$DB'"); }
                            { print $0 }'
 
 save_file $dhcpconf/dhcpd.conf

@@ -4,7 +4,6 @@ find_template dhcpcd_conf_single network dhcpcd_single
 find_template dhcpcd_conf        network dhcpcd
 find_template resolvconf_conf    network resolvconf
 
-
 interfaces="$(get_data "$getinterfaces")"
 
 nameservers=$(echo "$interfaces" | \
@@ -20,6 +19,7 @@ done
 
 prog='/####NAMESERVER####/ { if ( "'$nameservers'" == "" ) next; gsub(/####NAMESERVER####/, "'$nameservers'"); }
                            { print $0 }'
+
 save_file "/etc/resolvconf.conf"
 awk "$prog" "$resolvconf_conf" > "/etc/resolvconf.conf"
 
