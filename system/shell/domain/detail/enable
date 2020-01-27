@@ -30,3 +30,5 @@ if [ "$typ" = "standalone" ]; then
 else
   . $(dirname $BASH_SOURCE)/../dhcp/enable
 fi
+
+needreboot=1

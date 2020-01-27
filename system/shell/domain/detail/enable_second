@@ -25,7 +25,6 @@ systemctl stop mne_samba.service
 save_file $sambaconf/smb.conf
 save_file $dhcpconfig
 save_file /etc/hosts
-save_file /etc/resolv.conf
 save_file $kerberosconfig
 
 # -------------------------------------------
@@ -51,26 +50,10 @@ add_host $primaryaddr $primaryname $domain
 addr="$(ip addr show $netdevice | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)"
 add_host $addr $(hostname) $domain
 
-# -------------------------------------------
-# resolv.conf konfigurieren
-# -------------------------------------------
-
-rm -f /etc/resolv.conf
-echo "nameserver $primaryaddr" > /etc/resolv.conf
-echo "domain $domain" >> /etc/resolv.conf
-echo "search $domain $dnssearch" >> /etc/resolv.conf
-
-# -------------------------------------------
-# check kerberos
-# -------------------------------------------
-cp $sambavar/private/krb5.conf       $kerberosconfig
-
 admin=$vaadminInput
 if [ "$admin" = "" ];then
   admin=administrator
 fi
-echo "$vaadminpasswordInput" | kinit  $admin@$udomain 1>&$logfile 2>&1
-klist 1>&$logfile 2>&1
 
 # -------------------------------------------
 # domain provision
@@ -82,6 +65,14 @@ samba-tool domain join $domain DC \
     --realm="$domain" -U"$admin" \
     --dns-backend=BIND9_DLZ \
     --password="$vaadminpasswordInput" >&$logfile 2>&1
+
+# -------------------------------------------
+# check kerberos
+# -------------------------------------------
+cp $sambavar/private/krb5.conf       $kerberosconfig
+
+echo "$vaadminpasswordInput" | kinit  $admin@$udomain 1>&$logfile 2>&1
+klist 1>&$logfile 2>&1
 
 mod_smbconf
 mod_netpar
@@ -120,16 +111,6 @@ systemctl restart bind9.service
 # check name-server in dhclient.conf
 # -------------------------------------------
 mod_dhclient $addr $domain
-
-# -------------------------------------------
-# modifiziere resolv.conf
-# -------------------------------------------
-echo "nameserver $addr" > /etc/resolv.conf
-echo "domain $domain" >> /etc/resolv.conf
-echo "search $domain" >> /etc/resolv.conf
-
-systemctl disable systemd-resolved 1>&$logfile 2>&1
-systemctl stop systemd-resolved 1>&$logfile 2>&1
 
 # -------------------------------------------
 # kerberos localhost als server eintragen

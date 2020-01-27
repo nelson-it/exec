@@ -38,6 +38,7 @@ find_template radvdconf   domain/radv radvd.conf
 
 mkdir -p /etc/mne/dhcpd 1>&$logfile 2>&1
 touch /etc/dhcp/fix.conf 1>&$logfile 2>&1
+touch /etc/dhcp/fix6.conf 1>&$logfile 2>&1
 
 $sambabin/samba-tool user list | egrep "^dnsadmin\$" >/dev/null
 if [ ! "$?" = "0" ]; then
