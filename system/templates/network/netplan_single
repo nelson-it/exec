@@ -9,4 +9,4 @@ network:
             gateway4: ####GW####
             nameservers:
               addresses: ["####NAMESERVER####"]
-              search: [####SEARCH####]
+              search: [####DOMAIN#### ####SEARCH####]
