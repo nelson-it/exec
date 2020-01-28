@@ -8,16 +8,6 @@ add_host $addr $(hostname) $domain
 
 mod_netpar
 
-# -------------------------------------------
-# resolv.conf konfigurieren
-# -------------------------------------------
-
-save_file /etc/resolv.conf
-rm -f /etc/resolv.conf
-echo "nameserver $addr" > /etc/resolv.conf
-echo "domain $domain" >> /etc/resolv.conf
-echo "search $domain $dnssearch" >> /etc/resolv.conf
-
 systemctl restart mne_samba.service
 systemctl restart bind9.service
 

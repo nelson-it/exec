@@ -170,7 +170,9 @@ a2enmod dav >&$logfile 2>&1
 a2enmod dav_fs >&$logfile 2>&1
 a2enmod ssl >&$logfile 2>&1
 
+mne_error_ignore=1
 a2ensite default-ssl.conf >&$logfile 2>&1
+mne_error_ignore=
 
 a2ensite sogo >&$logfile 2>&1
 $apache2reload >&$logfile 2>&1
