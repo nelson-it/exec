@@ -114,7 +114,7 @@ systemctl restart bind9.service
 # -------------------------------------------
 # check name-server in dhclient.conf
 # -------------------------------------------
-mod_dhclient $addr $domain
+mod_dhclient $addr $domain "$domain $dnssearch"
 
 # -------------------------------------------
 # check kerberos
