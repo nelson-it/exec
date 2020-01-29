@@ -1,4 +1,4 @@
 #!/bin/bash
 
-systemctl restart smb.service
-systemctl restart nmb.service
+systemctl restart mne_smb.service
+systemctl restart mne_nmb.service

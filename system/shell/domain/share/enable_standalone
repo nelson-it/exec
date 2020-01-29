@@ -34,5 +34,3 @@ dirs=`( get_data "$getreleases" | \
 echo "$dirs" > $sambaconf/shares.conf
 
 . ./exec/system/shell/domain/restart/$typ
-
-exit $exit_status

@@ -101,7 +101,7 @@ samba-tool group addmembers DnsAdmins dnsadmin 1>&$logfile 2>&1
 mne_error_ignore=0
 
 samba-tool domain exportkeytab --principal=dnsadmin@$udomain /etc/mne/dns/dns.keytab >&$logfile 2>&1
-chown root:dhcpd /etc/mne/dns/dns.keytab
+chown root:$dhcpdgroup /etc/mne/dns/dns.keytab
 chmod 440 /etc/mne/dns/dns.keytab
 
 systemctl restart mne_samba.service
@@ -110,7 +110,7 @@ systemctl restart bind9.service
 # -------------------------------------------
 # check name-server in dhclient.conf
 # -------------------------------------------
-mod_dhclient $addr $domain
+mod_dhclient $addr $domain "$domain $dnssearch"
 
 # -------------------------------------------
 # kerberos localhost als server eintragen

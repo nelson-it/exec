@@ -40,10 +40,23 @@ conf="`awk "$prog" "deviceconfig=$single" $conffile`"
 mv $netinterfaces $netinterfaces""_`date +"%d.%m.%Y_%H:%M:%S"`
 echo "$conf" >  $netinterfaces
 
-for device in `ls /sys/class/net`
-do
-  ifconfig $device down
-  ifconfig $device up
-done
+val=$(get_data "$getinterfaces" | \
+  awk -F"%%%%" '{ nameserver = sprintf("%s %s", nameserver, $9); search = sprintf("%s %s", search, $11); if ( $10 != "" ) domain=$10 } END { printf("domain=\"%s\"; nameserver=\"%s\"; dnssearch=\"%s\"", domain, nameserver, search); }')
 
-needreboot=1
+eval "$val"
+
+if [ "$nameserver" != "" ]; then
+  echo 'make_resolv_conf() { :; }' > /etc/dhcp/dhclient-enter-hooks.d/mne_static_resolvconf
+
+  save_file /etc/resolv.conf
+  rm -f /etc/resolv.conf
+
+  echo "#modify by open source erp" > /etc/resolv.conf
+  echo "nameserver $nameserver"    >> /etc/resolv.conf
+  echo "domain $domain"            >> /etc/resolv.conf
+  echo "search $domain $dnssearch" >> /etc/resolv.conf
+else
+  rm -f /etc/dhcp/dhclient-enter-hooks.d/mne_static_resolvconf
+fi
+
+#needreboot=1

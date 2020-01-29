@@ -80,13 +80,14 @@ function mod_dhclient()
 {
   if [ -f $dhcpconfig ]; then
     find_template dhcpconfadd domain/enable dhcpconf_add.conf
-    prog=' /####DOMAIN####/     { gsub(/####DOMAIN####/,domain); }
-           /####NAMESERVER####/ { gsub(/####NAMESERVER####/,nameserver); }
+    prog=' /####DOMAIN####/     { if ( domain = "" ) next;     gsub(/####DOMAIN####/,domain); }
+           /####SEARCH####/     { if ( search = "" ) next;     gsub(/####SEARCH####/, search); }
+           /####NAMESERVER####/ { if ( nameserver = "" ) next; gsub(/####NAMESERVER####/,nameserver); }
                                 { print $0 }'
     
 	sed -e "/mnesamba_conf start/,/mnesamba_conf end/d" < $dhcpconfig > /tmp/dhclient.$$
     mv /tmp/dhclient.$$ $dhcpconfig
-    awk "$prog" "domain=$2" "nameserver=$1" $dhcpconfadd >> $dhcpconfig
+    awk "$prog" "search=$3" "domain=$2" "nameserver=$1" $dhcpconfadd >> $dhcpconfig
   fi
 }
 

@@ -10,6 +10,10 @@ fi
 
 systemctl daemon-reload
 
+mne_error_ignore=1
+systemctl stop    mne_sogo.service 2>&$logfile 1>&2
+systemctl disable mne_sogo.service 2>&$logfile 1>&2
+
 systemctl stop    mne_samba.service 2>&$logfile 1>&2
 systemctl disable mne_samba.service 2>&$logfile 1>&2
 
@@ -18,6 +22,7 @@ systemctl disable bind9.service 2>&$logfile 1>&2
 
 systemctl enable mne_smb.service 2>&$logfile 1>&2
 systemctl enable mne_nmb.service 2>&$logfile 1>&2
+mne_error_ignore=
 
 # -------------------------------------------
 # samba konfigurieren
@@ -35,6 +40,8 @@ if [ -f "$sambaconf/smb.conf" ]; then
    mv "$sambaconf/smb.conf" "$sambaconf/samba.conf"_`date +"%d.%m.%Y_%H:%M:%S"`
 fi
 awk "$prog" "workgroup=$workgroup" "domain=$domain" "description=$description" $conffile > $sambaconf/smb.conf
+
+mod_dhclient "" "" ""
 
 systemctl daemon-reload
 systemctl restart mne_smb.service      2>&$logfile 1>&2
