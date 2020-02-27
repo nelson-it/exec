@@ -14,7 +14,7 @@ mkdir -p $certcsrdir  2>&1 >/dev/null
 mkdir -p $certextdir  2>&1 >/dev/null
 
 chown -R root:$daemongroup $certcadir
-chown -R root:$daemongroup $certkeydir
+chown -R root:root         $certkeydir
 chown -R root:$daemongroup $certcertdir
 chown -R root:$daemongroup $certcsrdir
 chown -R root:$daemongroup $certextdir
@@ -24,6 +24,9 @@ chmod 770 $certkeydir
 chmod 770 $certcertdir
 chmod 770 $certcsrdir
 chmod 770 $certextdir
+
+setfacl -R -m   u:$daemongroup:rwx $certkeydir
+setfacl    -m d:u:$daemongroup:rwx $certkeydir
 
 conf=`get_data "$getcertconf"`
 get_certconf "$conf"
