@@ -137,6 +137,7 @@ function mod_smbconf()
     local prog="/\[global\]/ { start=1; print \$0; next;}
    /^[    ]*$|^\[/  { if ( start == 1 )
                     {
+                      print \"        include = $sambaconf/localextra.conf\";
                       print \"        include = $sambaconf/globalextra.conf\";
                       print \"        include = $sambaconf/dnsforward.conf\";
                       print \"        include = $sambaconf/dhcp.conf\";
@@ -149,6 +150,7 @@ function mod_smbconf()
     awk "$prog" < $sambaconf/smb.conf  > /tmp/smb.$$
     mv /tmp/smb.$$ $sambaconf/smb.conf;
     
+    touch $sambaconf/localextra.conf;
     touch $sambaconf/globalextra.conf;
     touch $sambaconf/dhcp.conf;
     touch $sambaconf/dnsforward.conf;
