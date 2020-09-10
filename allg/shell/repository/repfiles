@@ -1,11 +1,6 @@
 #!/bin/bash
 
-uname=`uname`
-if [ ! "$uname" = "Darwin" ]; then
-    uname=`uname -o`
-else
-    export DYLD_LIBRARY_PATH=/Library/PostgreSQL/8.4/lib
-fi
+uname=`uname -o`
 
 psql=psql
 if [ "$uname" = "Cygwin" ]; then

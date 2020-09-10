@@ -4,6 +4,14 @@ repositoryid=
 content_type="text/plain"
 actdate=`date +"%s"`
 
+url="http://`hostname`:8024"
+mailtempl="exec/allg/shell/repository/repmail"
+frommail="erpteam@localhost"
+signature="Ihr Erp Team"
+db=erpdb
+md5sum=md5sum
+sendmail=/usr/sbin/sendmail
+
 while [ $# -gt 0 ] ; do
   case $1 in
           -repositoryid ) repositoryid=$2; shift 2;;
@@ -26,9 +34,15 @@ while [ $# -gt 0 ] ; do
              -uownstreet) ownstreet=$2;    shift 2;;
             -uowntelefon) owntelefon=$2;   shift 2;;
                -username) username=$2;     shift 2;;
+                      -r) projectroot=$2;  shift 2;;
+                -project) project=$2;      shift 2;;
                       * ) shift 1;;
   esac
 done
+
+if [ -f $projectroot/$project/exec/allg/config.sh ]; then
+  . $projectroot/$project/exec/allg/config.sh
+fi
 
 db=`echo $db | sed -e "s/@.*$//"`
 
@@ -40,7 +54,7 @@ fi
 
 get_data()
 {
-   echo "\\pset format unaligned \\pset footer off \\pset  tuples_only \\\\ $1" | sed -e "s@par1@$2@g" -e "s@par2@$3@g" -e "s@par3@$4@g" -e "s@par4@$5@g" | $psql -h localhost -E  -U mneerprepository $db | sed -e "1,3d"
+   echo "\\pset format unaligned \\pset footer off \\pset  tuples_only \\\\ $1" | sed -e "s@par1@$2@g" -e "s@par2@$3@g" -e "s@par3@$4@g" -e "s@par4@$5@g" | $psql --quiet --set ON_ERROR_STOP=on --no-align --field-separator '|' -h localhost -E  -U mneerprepository $db
 }
 
 
@@ -106,6 +120,13 @@ updatesend="UPDATE mne_repository.fileinterests t0 SET lastsend=par1 WHERE filei
 updatelinkid="DELETE FROM mne_repository.mail WHERE repositoryid='par2' AND personid='par3'; \
               INSERT INTO mne_repository.mail ( mailid, repositoryid, personid, linkid, createuser, modifyuser, createdate, modifydate ) \
                                        VALUES ( 'par1', 'par2', 'par3', 'par4', session_user, session_user, mne_catalog.acttime(), mne_catalog.acttime() );"
+
+
+mksubject()
+{
+    YYYYMMDD=`date +%d.%m.%Y`
+    echo "$YYYYMMDD Neue Projektunterlagen: $ordername"
+}
 
 mail_it() 
 {
@@ -209,11 +230,4 @@ get_data "$getname" $repositoryid | \
 }
 
 result=$?
-if [ "$result" = "0" ]; then
-    echo '<?xml version="1.0" encoding="utf-8"?><result><body>ok</body>'
-else
-    echo '<?xml version="1.0" encoding="utf-8"?><result><body>notok</body>'
-fi
-
-sleep 0
 exit $result
