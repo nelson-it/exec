@@ -1,0 +1,366 @@
+function mne_need_error()
+{
+mne_error_ignore=10
+errorresult=0
+errorlinecount=0
+errorwaitcount=1
+if [ "$1" != "" ]; then errorwaitcount=$1; fi
+
+trap 'mne_clear_error $BASH_COMMAND $LINENO' DEBUG
+}
+
+function mne_clear_error()
+{
+  local status="$?"
+  if [ "$errorlinecount" -ge "$errorwaitcount" ] && [ "$status" = "0" ]; then
+    trap '' DEBUG
+    mne_error_ignore=
+  fi
+  let errorlinecount=errorlinecount+1
+}
+
+function mne_error_handler()
+{
+# Aufruf mit: trap 'mne_error_handler $BASH_COMMAND $LINENO $?' ERR
+    
+  errorresult=$?
+  if [ "`type -t script_error_handler`" = "function" ]; then
+    script_error_handler $1 $2 $3
+  fi
+    
+  if [ "$mne_error_ignore" = "1" ]; then
+    return;
+  fi
+  
+  if [ "$mne_error_ignore" = "10" ] || [ "$mne_error_ignore" = "11" ]; then
+    trap '' DEBUG
+    mne_error_ignore=
+    return;
+  fi
+  
+  stack=$(echo "$1" | sed -e 's/ /\n          /g');
+  echo "error found: " 1>&2
+  log "error in: $0"
+  echo "   stack: $stack" 1>&2
+  echo "    line: $2" 1>&2
+  echo "  status: $3" 1>&2
+  echo "   error: $errorresult" 1>&2
+    
+  if [ "$noexit" = "1" ]; then
+    noexit=0
+    return;
+  fi
+  exit 1
+}
+
+function cleanup
+{
+  ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
+  
+  if [ "$needreboot" != "" ]; then
+      echo "reboot in 1 min" >&2
+      shutdown -r 1>&$logfile 2>&$logfile
+  fi
+  if [ "$logstart" != "" ];  then  log "==== END"; fi
+  sleep 0
+}
+
+function log()
+{
+   echo "$*" >&$logfile
+}
+
+function logstart()
+{
+    logfile=3
+    exec 3> >( while read line; do log "$line"; done )
+
+    exec 3> >( awk '{ if ( NR == 1 ) print "==== '$0' "; print $0 }' | logger -t mne_exe$logid -id )
+    exec 2> >( awk '{ print $0; print $0 > "/dev/stderr" }' 1>&3 )
+    if [ "$debug" != "" ]; then
+        exec 1> >( awk '{ print $0; print $0 > "/dev/stderr" }' 2>&3 )
+   fi
+}
+
+
+function mne_checksys()
+{
+   for i in "${sysok[@]}"
+   do
+      if [ "${DISTRIB_ID,,}" = "$i" ]; then
+        return;
+      fi
+   done
+      
+   stack=$(echo "$BASH_SOURCE" | sed -e 's/ /\n          /g');
+   echo "${BASH_SOURCE[1]}: system ${DISTRIB_ID,,} not supported" 1>&2
+   echo "   stack: $stack" 1>&2 
+   exit 2;
+ }
+    
+
+function savefile()
+{
+  savedfile=/dev/null
+  if [ -f "$1" ]; then
+    cp $1 $1""_$actdate
+    savedfile=$1""_$actdate
+  elif [ -e "$1" ]; then
+    mv $1 $1""_$actdate
+    savedfile=$1""_$actdate
+  fi
+}
+
+function findtemplate()
+{
+  for (( i=${#path[@]}-1 ; i>=0 ; i-- ))
+  do
+    if [ -f "${path[$i]}/template/$1/$2" ]; then
+      echo "${path[$i]}/template/$1/$2";
+      return 0;
+    fi
+  done
+  echo "template/$1/$2 not found" 1>&2
+  exit 10;
+}
+
+
+    
+function toupper()
+{
+  echo "$1"| awk '{print toupper($0)}'
+}
+    
+function tolower()
+{
+  echo "$1"| awk '{print tolower($0)}'
+}
+    
+function Tolower()
+{
+  echo "$1"| awk '{printf("%s%s", toupper(substr($0,1,1)), tolower(substr($0,2))) }'
+}
+    
+function pg_adduser()
+{
+  ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 up
+  su - postgres -c "echo \"CREATE ROLE $1; ALTER ROLE $1 LOGIN;\" | psql -h 127.0.156.1 >&$logfile 2>&1; exit 0"; 
+  ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
+}
+    
+function pg_addaccess()
+{
+  ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 up
+  pg_hba=$(echo 'show hba_file' | psql --set ON_ERROR_STOP=on --tuples-only --no-align --field-separator '%%%%'  -U postgres -h 127.0.156.1)
+  ifconfig lo:mneconfig 127.0.156.1 netmask 255.255.255.0 down
+
+  egrep $1 $pg_hba >&$logfile 2>&1
+  if [ ! "$?" = "0" ]; then
+    mv  $pg_hba $pg_hba"".orig 
+
+    echo "$2"            > $pg_hba
+    cat $pg_hba"".orig  >> $pg_hba
+    chown postgres:postgres $pg_hba
+    su - postgres -c "$(pg_config --bindir)/pg_ctl reload -D $(dirname $pg_hba)" >&$logfile 2>&1
+  fi
+}
+
+function json_writeheader()
+{
+  local i;
+  local a aa;
+  local komma;
+  declare -a json_ids json_labels;
+  declare -A json_typs json_formats json_regexps;
+  
+  json_komma=
+
+  if [ "$vacols" != "$1" ]; then
+	echo "#mne_lang#Spalten stimmen nicht überein#" 1>&2
+  fi
+
+  IFS=',' read -r -a json_ids    <<< "$1"
+  IFS=',' read -r -a json_labels <<< "$2"
+
+  IFS=',' read -r -a a <<< "$3"; for i in "${a[@]}"; do aa=(${i//:/ }); eval json_typs[${aa[0]}]=${aa[1]}; done
+  IFS=',' read -r -a a <<< "$4"; for i in "${a[@]}"; do aa=(${i//:/ }); eval json_formats[${aa[0]}]=${aa[1]}; done
+  IFS=',' read -r -a a <<< "$5"; for i in "${a[@]}"; do aa=(${i//:/ }); eval json_regexps[${aa[0]}]=${aa[1]}; done
+  
+  komma=""; echo -n '{ "ids"     : [ '; for i in "${json_ids[@]}"; do echo -n "$komma"'"'"$i"'"'; komma=","; done; echo ' ], '
+  komma=""; echo -n '  "labels"  : [ '; for i in "${json_labels[@]}"; do echo -n "$komma"'"'"#mne_lang#$i"'"'; komma=","; done; echo ' ], '
+  komma=""; echo -n '  "typs"    : [ '; for i in "${json_ids[@]}"; do if [ "${json_typs[$i]}" = "" ]; then echo -n "$komma"'"2"'; else echo -n "$komma"'"'"${json_typs[$i]}"'"'; fi;  komma=","; done; echo ' ], '
+  komma=""; echo -n '  "formats" : [ '; for i in "${json_ids[@]}"; do echo -n "$komma"'"'"${json_formats[$i]}"'"'; komma=","; done; echo ' ], '
+  komma=""; echo -n '  "regexps" : [ '; for i in "${json_ids[@]}"; do if [ "${json_regexps[$i]}" = "" ]; then echo -n "$komma"'""'; else echo -n "$komma"'"'"${json_regexps[$i]}"'"'; fi;  komma=","; done; echo ' ], '
+
+  if [ "$vano_vals" != "" ]; then
+    echo '  "values"  : [] '
+    exit 0;
+  fi
+} 
+
+function json_mkdata()
+{
+    local var="$1"
+    
+    var="${var//[$'\\']/\\\\}"
+    var="${var//\"/\\\"}"
+    var="${var//\//\\/}"
+    var="${var//[$'\b']/\\b}"
+    var="${var//[$'\f']/\\f}"
+    var="${var//[$'\n']/\\n}"
+    var="${var//[$'\r']/\\r}"
+    var="${var//[$'\t']/\\t}"
+    
+    echo "$var"
+}
+
+function json_writedata()
+{
+    local komma
+    local i
+    
+    echo -n "$json_komma"'[ '
+    i=1;
+    while [ "$i" -le "$#" ]
+    do
+      echo -n "$komma"'"'"$( json_mkdata "${!i}")"'"'
+      komma=","
+      let i="i+1";
+    done
+    echo ' ]'
+    json_komma=','
+}
+
+ipip2int()
+{
+    local a b c d
+    local i j k
+    { IFS=. read a b c d; } <<< $1
+    #echo $(((((((a << 8) | b) << 8) | c) << 8) | d))
+    
+    j=0;
+    for k in a b c d
+    do
+      i=8;
+      while [ $i != 0 ]
+      do
+       let i=$i-1
+       if [ $((k & ( 0x1 << $i))) != 0 ]; then
+         let j=$j+1;
+       else
+         echo $j
+         return;
+       fi
+      done
+    done
+}
+
+ipint2ip()
+{
+    local ui32=$1; shift
+    local ip n
+    for n in 1 2 3 4; do
+        ip=$((ui32 & 0xff))${ip:+.}$ip
+        ui32=$((ui32 >> 8))
+    done
+    echo $ip
+}
+
+ipmask2int()
+{
+    local a b c d
+    local i j k
+    { IFS=. read a b c d; } <<< $1
+    
+    j=0;
+    for k in a b c d
+    do
+      i=8;
+      while [ $i != 0 ]
+      do
+       let i=$i-1
+       if [ $((k & ( 0x1 << $i))) != 0 ]; then
+         let j=$j+1;
+       else
+         echo $j
+         return;
+       fi
+      done
+    done
+}
+
+ipnetmask()
+{
+    local mask=$((0xffffffff << (32 - $1))); shift
+    ipint2ip $mask
+}
+
+ipbroadcast()
+{
+    local addr=$(ip2int $1); shift
+    local mask=$((0xffffffff << (32 -$1))); shift
+    ipint2ip $((addr | ~mask))
+}
+
+ipnetwork()
+{
+    local addr=$(ipip2int $1); shift
+    local mask=$((0xffffffff << (32 -$1))); shift
+    ipint2ip $((addr & mask))
+}
+
+function compare()
+{
+    case "$2" in
+        "like")
+          if [[ "$1" =~ ${3//\%/\.\*} ]]; then
+            echo 1
+            return
+          fi;;
+         "=")
+          if [[ "$1" = $3 ]]; then
+            echo 1
+            return
+          fi;;
+         "<>")
+          if [[ "$1" != $3 ]]; then
+            echo 1
+            return
+          fi;;
+         "<")
+          if [[ "$1" < $3 ]]; then
+            echo 1
+            return
+          fi;;
+         ">")
+          if [[ "$1" > $3 ]]; then
+            echo 1
+            return
+          fi;;
+         "<=")
+          if [[ "$1" < $3 ]]; then
+            echo 1
+            return
+          fi;;
+         ">=")
+          if [[ "$1" > $3 ]]; then
+            echo 1
+            return
+          fi;;
+         "isnull")
+          if [[ "$1" = "" ]]; then
+            echo 1
+            return
+          fi;;
+         "is not null")
+          if [[ ! "$1" = "" ]]; then
+            echo 1
+            return
+          fi;;
+          "")
+            echo 1
+            return;;
+esac
+    
+}
+

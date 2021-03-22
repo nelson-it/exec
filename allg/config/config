@@ -1,0 +1,13 @@
+#!/bin/bash
+
+export PATH=/sbin:/usr/sbin:$PATH
+export LANG=C
+umask 0022
+
+bs='\\'
+exit_status=0
+    
+actdate=$(date +%d.%m.%Y_%H:%M:%S)
+acttime=$(date +%s)
+
+
