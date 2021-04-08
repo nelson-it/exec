@@ -1,4 +1,0 @@
-#!/bin/bash
-
-eval $($sambabin/samba-tool user show $user 2>/dev/null| awk 'BEGIN { uid=gid="null" } /^uidNumber:/ { uid=$2 } /^gidNumber:/ { gid=$2 } END { printf ("uid=%s;gid=%s\n", uid, gid); }')
-get_data "$updateuser" "$user" "$uid" "$gid" 1>&$logfile 2>&1

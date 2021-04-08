@@ -1,3 +1,0 @@
-#!/bin/bash 
-
-. exec/system/shell/domain/user/del_primary
