@@ -2,7 +2,7 @@
 
 get_data()
 {
-   echo "\\pset format unaligned \\pset footer off \\pset  tuples_only \\\\ $1" | sed -e "s@par1@$2@g" -e "s@par2@$3@g" -e "s@par3@$4@g" -e "s@par4@$5@g" | $psql --quiet --set ON_ERROR_STOP=on --no-align --field-separator '|' -h localhost -E  -U mneerprepository $db
+   echo "\\pset format unaligned \\pset footer off \\pset  tuples_only \\\\ $1" | sed -e "s@par1@$2@g" -e "s@par2@$3@g" -e "s@par3@$4@g" -e "s@par4@$5@g" | $psql --quiet --set ON_ERROR_STOP=on --no-align --field-separator '|' -h localhost -E  -U mne_repository $db
 }
 
 debug_data()
@@ -30,13 +30,11 @@ while [ $# -gt 0 ] ; do
              -user ) user=$2; shift 2;;
          -personid ) user=$2; shift 2;;
          -datapath ) eval root$2=$3; shift 3;;
-               -db ) db=$2;          shift 2;;
+               -db ) db=$(echo $2 | sed -e "s/@.*$//"); shift 2;;
                -id ) id=$2; get_repperson `get_data "$getrepperson" $2`; haveid=1; shift 2;;
                  * ) shift 1;;
   esac
 done
-
-db=`echo $db | sed -e "s/@.*$//"`
 
 if [ "$haveid" = "0" ] && [ "$user" = "" ]; then
     echo "Benutzer nicht angegeben";
