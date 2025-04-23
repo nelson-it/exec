@@ -16,13 +16,19 @@ if [ "$ALLGREADED" = "" ]; then
              -locale) deamonlocale=$2;  shift 2;;
                 -va*) p=${1//\./_};
                       v="${2//\'/\'\\\'\'}"
-                      eval "${p:1}='$v'";
+                      
+                      i="${p:1}"
+                      if [ "${!i}" = "" ]; then
+                        eval "${p:1}='$v'";
+                      fi
+                      
                       i="${p:1}ignore"
                       if [ "${!i}" = "" ] && [[ ! "${p:1}" == *"passwd"* ]] && [[ ! "${p:1}" == *"password"* ]]; then
                         params[${#params[@]}]="${p:1}=$v"
                       else
                         params[${#params[@]}]="${p:1}=********"
                       fi
+
                       shift 2 ;;
                    *) shift 1 ;;
       esac
